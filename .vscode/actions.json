@@ -1,0 +1,47 @@
+[
+  {
+    "extensions": [
+      "GLOBAL"
+    ],
+    "name": "Build all",
+    "command": "/QOpenSys/pkgs/bin/gmake BUILDLIB=&CURLIB",
+    "environment": "pase",
+    "deployFirst": true
+  },
+  {
+    "extensions": [
+      "GLOBAL"
+    ],
+    "name": "Build without examples",
+    "command": "/QOpenSys/pkgs/bin/gmake BUILD_EXAMPLES=0 BUILDLIB=&CURLIB",
+    "environment": "pase",
+    "deployFirst": true
+  },
+  {
+    "extensions": [
+      "GLOBAL"
+    ],
+    "name": "Build without XML",
+    "command": "/QOpenSys/pkgs/bin/gmake USE_XML=0 BUILDLIB=&CURLIB",
+    "environment": "pase",
+    "deployFirst": true
+  },
+  {
+    "extensions": [
+      "GLOBAL"
+    ],
+    "name": "Build without debug",
+    "command": "/QOpenSys/pkgs/bin/gmake DEBUG=0 BUILDLIB=&CURLIB",
+    "environment": "pase",
+    "deployFirst": true
+  },
+  {
+    "extensions": [
+      "GLOBAL"
+    ],
+    "name": "Build current",
+    "command": "/QOpenSys/pkgs/bin/gmake BUILDLIB=&CURLIB &BASENAME",
+    "environment": "pase",
+    "deployFirst": true
+  }
+]

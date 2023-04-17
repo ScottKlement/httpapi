@@ -15,6 +15,10 @@ USE_XML			 	 ?= 1
 BUILD_EXAMPLES ?= 1
 DEBUG					 ?= 1
 
+ifeq (,$(BUILDLIB))
+LIBRARY=$(BUILDLIB)
+endif
+
 # Make sure LIBRARY has been set and doesn't have any blanks
 ifneq (1,$(words [$(LIBRARY)]))
 $(error LIBRARY variable is not set correctly. Set to a valid library name and try again)
