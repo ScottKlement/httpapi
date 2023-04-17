@@ -1,0 +1,416 @@
+     /*-                                                                            +
+      * Copyright (c) 2004-2023 Scott C. Klement                                    +
+      * All rights reserved.                                                        +
+      *                                                                             +
+      * Redistribution and use in source and binary forms, with or without          +
+      * modification, are permitted provided that the following conditions          +
+      * are met:                                                                    +
+      * 1. Redistributions of source code must retain the above copyright           +
+      *    notice, this list of conditions and the following disclaimer.            +
+      * 2. Redistributions in binary form must reproduce the above copyright        +
+      *    notice, this list of conditions and the following disclaimer in the      +
+      *    documentation and/or other materials provided with the distribution.     +
+      *                                                                             +
+      * THIS SOFTWARE IS PROVIDED BY THE AUTHOR AND CONTRIBUTORS ``AS IS'' AND      +
+      * ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE       +
+      * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE  +
+      * ARE DISCLAIMED.  IN NO EVENT SHALL THE AUTHOR OR CONTRIBUTORS BE LIABLE     +
+      * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL  +
+      * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS     +
+      * OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)       +
+      * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT  +
+      * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY   +
+      * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF      +
+      * SUCH DAMAGE.                                                                +
+      */                                                                            +
+
+      *
+      *  This contains RPG definitions needed for calling routines from
+      *  the eXpat XML parser. This source member is distributed with
+      *  HTTPAPI for your convienience.
+      *
+
+      /if defined(EXPAT_H)
+      /eof
+      /endif
+      /define EXPAT_H
+
+      *********************************************************
+      * Define this if EXPAT was compiled to output UTF-16,
+      * or undefine it if Expat was compiled to output UTF-8
+      *********************************************************
+      /define XML_UNICODE
+
+      *********************************************************
+      * Status flags
+      *********************************************************
+     D XML_STATUS_OK...
+     D                 C                   1
+     D XML_STATUS_ERROR...
+     D                 C                   0
+
+      *********************************************************
+      * Constamts that identify the various encodings
+      *********************************************************
+      /if defined(XML_UNICODE)
+     D XML_ENC_UTF8...
+     D                 c                   u'005500540046002d00380000'
+     D XML_ENC_UTF16...
+     D                 c                   u'005500540046002d003100360000'
+     D XML_ENC_ISO8859_1...
+     D                 c                   u'00490053004f002d00380038-
+     D                                     00350039002d00310000'
+     D XML_ENC_US_ASCII...
+     D                 c                   u'00550053002d004100530043-
+     D                                     004900490000'
+      /else
+     D XML_ENC_UTF8...
+     D                 c                   x'5554462d3800'
+     D XML_ENC_UTF16...
+     D                 c                   x'5554462d313600'
+     D XML_ENC_ISO8859_1...
+     D                 c                   x'49534f2d3838352d3100'
+     D XML_ENC_US_ASCII...
+     D                 c                   x'55532d415343494900'
+      /endif
+
+      *-----------------------------------------------------------------
+      *  XML_Parser:  opaque pointer to the XML Parser state information
+      *               that's used internally by eXpat
+      *-----------------------------------------------------------------
+     D XML_Parser      s               *   based(Template)
+
+      *-----------------------------------------------------------------
+      * Data structure to store XML Encoding Info
+      *
+      * typedef struct {
+      *    int map[256];
+      *    void *data;
+      *    int (XMLCALL *convert)(void *data, const char *s);
+      *    int (XMLCALL *release)(void *data);
+      * } XML_Encoding;
+      *
+      *
+      * map = map from the encoding to UTF-8.  Each item in the map
+      *       corresponds to a code point of the encoding.  map[0] is
+      *       codepoint 0, map[255] is codepoint 255, etc.   When a
+      *       value is set to -1, it means that value is invalid as
+      *       an initial byte in a multibyte sequence.   When it's
+      *       -n, then n is the number of bytes in a sequence, and
+      *       conversion is accomplished by calling the convert()
+      *       function.
+      *
+      * data = user-defined data that's passed to each call to
+      *          convert() and release()
+      *
+      * convert = procedure to call when converting multi-byte
+      *            characters.  May be *NULL if no multibyte
+      *            chars are required.
+      *
+      *   D myConvert       PR            10I 0
+      *   D    data                         *   value
+      *   D    string                       *   value
+      *
+      * release = procedure that's called when the data pointer
+      *            is to be released.  May be *NULL if no data
+      *            needs releasing.
+      *
+      *   D myRelease       PR
+      *   D    data                         *   value
+      *
+      *-----------------------------------------------------------------
+     D XML_Encoding    ds                  based(Template)
+     D   map                         10I 0 dim(256)
+     D   data                          *
+     D   convert                       *   procptr
+     D   release                       *   procptr
+
+      *-----------------------------------------------------------------
+      * XML_ParserCreate():  Creates a new XML_Parser object.
+      *
+      *   encoding = (input) null-terminated name of encoding to use
+      *                   or *OMIT to let Expat try to figure it out
+      *
+      * returns an XML_Parser, or *NULL upon failure.
+      *-----------------------------------------------------------------
+      /if defined(XML_UNICODE)
+     D XML_ParserCreate...
+     D                 PR                  ExtProc('XML_ParserCreate')
+     D                                     like(XML_Parser)
+     D    encoding                  100C   const options(*varsize:*omit)
+      /else
+     D XML_ParserCreate...
+     D                 PR                  ExtProc('XML_ParserCreate')
+     D                                     like(XML_Parser)
+     D    encoding                  100A   const options(*varsize:*omit)
+      /endif
+
+      *-----------------------------------------------------------------
+      * XML_SetUserData():  Set user data to be sent to callbacks
+      *
+      *    parser = (input) XML Parser to set user data for
+      *  userData = (input) pointer to user data that is to be
+      *                     passed to each call-back procedure
+      *-----------------------------------------------------------------
+     D XML_SetUserData...
+     D                 PR                  ExtProc('XML_SetUserData')
+     D    parser                           like(XML_Parser) value
+     D    userData                     *   value
+
+      *-----------------------------------------------------------------
+      * XML_SetElementHandler():  Set functions to be called for
+      *      each starting & ending element
+      *
+      *       parser = (input) XML_Parser to set functions for
+      *        start = (input) pointer to call-back procedure for
+      *                        start tags
+      *          end = (input) pointer to call-back procedure for
+      *                        end tags
+      *
+      *  D myStartHandler  PR            10I 0
+      *  D    userData                     *   value
+      *  D    elementName                  *   value
+      *  D    atts                         *   dim(1000) options(*varsize)
+      *
+      *        userData = the pointer you supplied with XML_SetUserData
+      *     elementName = null-terminated string w/the element name
+      *            atts = null-terminated array of pointers, each
+      *                   points to a null-terminated string containing
+      *                   an attribute name or value (they alternate)
+      *
+      *  D myEndHandler    PR            10I 0
+      *  D    userData                     *   value
+      *  D    elementName                  *   value
+      *
+      *        userData = the pointer you supplied with XML_SetUserData
+      *     elementName = null-terminated string w/the element name
+      *
+      * Note: This is a shortcut for calling XML_SetStartElementHandler()
+      *        and XML_SetEndElementHandler()
+      *-----------------------------------------------------------------
+     D XML_SetElementHandler...
+     D                 PR                  ExtProc('XML_SetElementHandler')
+     D    parser                           like(XML_Parser) value
+     D    start                        *   procptr value
+     D    end                          *   procptr value
+
+     D XML_SetStartElementHandler...
+     D                 PR                  ExtProc('XML_SetStartElement-
+     D                                     Handler')
+     D    parser                           like(XML_Parser) value
+     D    start                        *   procptr value
+
+     D XML_SetEndElementHandler...
+     D                 PR                  ExtProc('XML_SetEndElement-
+     D                                     Handler')
+     D    parser                           like(XML_Parser) value
+     D    end                          *   procptr value
+
+      *-----------------------------------------------------------------
+      * XML_SetCharacterDataHandler():  Set handler for character data
+      *
+      *       parser = (input) XML_Parser to set functions for
+      *     charhndl = (input) pointer to call-back procedure for
+      *                        character data
+      *
+      *  D myCharHandler   PR
+      *  D    userData                     *   value
+      *  D    string                  65535A   const options(*varsize)
+      *  D    len                        10I 0 value
+      *
+      *
+      * Note: The string is options(*varsize).  You MUST use the
+      *       "len" variable to determine how much was passed, and
+      *       use caution not to use data past that length.
+      *
+      * Note: This function might be called multiple times for a single
+      *       contiguous character data block.  You should concatenate
+      *       the data together.
+      *-----------------------------------------------------------------
+     D XML_SetCharacterDataHandler...
+     D                 PR                  ExtProc('XML_SetCharacterData-
+     D                                     Handler')
+     D    parser                           like(XML_Parser) value
+     D    charhndl                     *   procptr value
+
+      *-----------------------------------------------------------------
+      * XML_Parse():  Parse XML data in stream
+      *
+      *    parser = (input) XML_Parser object that will do the parsing
+      *         s = (input) next chunk of data from XML stream
+      *       len = (input) length of XML data in 's'
+      *   isFinal = (input) flag that specifies whether this is the
+      *                     final chunk of the stream.  Set to 1 if it
+      *                     is, or 0 otherwise.
+      *
+      *  Returns XML_STATUS_OK if successful
+      *       or XML_STATUS_ERROR upon failure
+      *-----------------------------------------------------------------
+     D XML_Parse...
+     D                 PR            10I 0 ExtProc('XML_Parse')
+     D    parser                           like(XML_Parser) value
+     D    s                            *   value options(*string)
+     D    len                        10I 0 value
+     D    isFinal                    10I 0 value
+
+      *-----------------------------------------------------------------
+      * XML_GetErrorCode():  Retrieves the error number of the
+      *      last error that occurred while parsing.
+      *
+      *       parser = (input) XML_Parser object to retrieve error from
+      *
+      * returns the error number.
+      *-----------------------------------------------------------------
+     D XML_GetErrorCode...
+     D                 PR            10I 0 ExtProc('XML_GetErrorCode')
+     D    parser                           like(XML_Parser) value
+
+      *-----------------------------------------------------------------
+      * XML_ErrorString(): Returns the human-readable error message
+      *      that corresponds to an error number.
+      *
+      *       code = (input) error number to get message for.
+      *
+      * returns a null-terminated error string.
+      *-----------------------------------------------------------------
+     D XML_ErrorString...
+     D                 PR              *   ExtProc('XML_ErrorString')
+     D    code                       10I 0 value
+
+      *-----------------------------------------------------------------
+      * XML_GetCurrentLineNumber():  Get the line number of the XML
+      *     document that's currently being parsed.
+      *
+      *       parser = (input) XML_Parser to retrieve line number from
+      *
+      * returns the line number.
+      *-----------------------------------------------------------------
+     D XML_GetCurrentLineNumber...
+     D                 PR            10I 0 ExtProc('XML_GetCurrentLine-
+     D                                     Number')
+     D    parser                           like(XML_Parser) value
+
+      *-----------------------------------------------------------------
+      * XML_GetCurrentColumnNumber(): Return the offset from the start
+      *     of the current line.
+      *
+      *       parser = (input) XML_Parser to retrieve line number from
+      *
+      * returns the column number.
+      *-----------------------------------------------------------------
+     D XML_GetCurrentColumnNumber...
+     D                 PR            10I 0 ExtProc('XML_GetCurrentColumn-
+     D                                     Number')
+     D    parser                           like(XML_Parser) value
+
+      *-----------------------------------------------------------------
+      * XML_ParserFree():  Destroys & frees up resources used by an
+      *     XML_Parser object.
+      *
+      *       parser = (input) XML_Parser to destroy
+      *
+      *-----------------------------------------------------------------
+     D XML_ParserFree...
+     D                 PR                  ExtProc('XML_ParserFree')
+     D    parser                           like(XML_Parser) value
+
+
+      *-----------------------------------------------------------------
+      * XML_SetUnknownEncodingHandler():  Set a handler to handle any
+      *     encodings that eXpat is not familiar with.
+      *
+      *     parser = (input) XML_Parser that will use the encoding
+      * enchandler = (input) procedure to call to initialize the
+      *                      XML_Encoding structure for an unknown
+      *                      encoding.
+      *       info = (input) XML_Encoding structure that will be set
+      *
+      *  An encoding handler should be prototyped as:
+      *
+      *   D myHandler       PR            10I 0
+      *   D   handlerData                   *   value
+      *   D   name                          *   value
+      *   D   info                              likeds(XML_Encoding)
+      *
+      *-----------------------------------------------------------------
+     D XML_SetUnknownEncodingHandler...
+     D                 PR                  ExtProc('XML_SetUnknownEncoding-
+     D                                     Handler')
+     D    parser                           like(XML_Parser) value
+     D    enchandler                   *   procptr value
+     D    info                             likeds(XML_Encoding)
+
+
+      *-----------------------------------------------------------------
+      * XML_ParserCreateNS():  Creates a new XML_Parser object
+      *      that uses namespace processing
+      *
+      * This causes the namespace qualifier to be expanded to the
+      * full URL for a namespace.  You can specify the character that
+      * separates the namespace from the URL.
+      *
+      * example:
+      *      <ns:Result xmlns:ns="http://www.example.com/ns">
+      * is expanded to:
+      *      http://wwww.example.com/ns<sep>Result
+      *
+      *   encoding = (input) name of encoding to use.
+      *                   or *OMIT if no special encoding is used
+      *   nsSeparator = (input) character that will separate the
+      *                   URL from the element name. (or x'00' for none)
+      *
+      * returns an XML_Parser, or *NULL upon failure.
+      *-----------------------------------------------------------------
+      /if defined(XML_UNICODE)
+     D XML_ParserCreateNS...
+     D                 PR                  ExtProc(*CWIDEN
+     D                                     :'XML_ParserCreateNS')
+     D                                     like(XML_Parser)
+     D    encoding                  100C   const options(*varsize:*omit)
+     D    nsSeparator                 1A   value
+      /else
+     D XML_ParserCreateNS...
+     D                 PR                  ExtProc(*CWIDEN
+     D                                     :'XML_ParserCreateNS')
+     D                                     like(XML_Parser)
+     D    encoding                  100A   const options(*varsize:*omit)
+     D    nsSeparator                 1A   value
+      /endif
+
+
+      *-----------------------------------------------------------------
+      * XML_SetStartNamespaceDeclHandler():  When namespace parsing is
+      *   turned on, this calls the handler once for each declared
+      *   namespace.
+      *
+      *     parser = (input) XML Parser to set namespace in
+      *      start = (input) pointer to handler procedure in this format:
+      *        D handler         PR
+      *        D   userdata                      *   value
+      *        D   prefix                        *   value
+      *        D   uri                           *   value
+      *-----------------------------------------------------------------
+     D XML_SetStartNamespaceDeclHandler...
+     D                 PR                  extproc('XML_SetStartNamespace-
+     D                                     DeclHandler')
+     D   parser                            like(XML_Parser) value
+     D   start                         *   procptr value
+
+
+      *-----------------------------------------------------------------
+      * XML_SetEndNamespaceDeclHandler():  Sets a handler for the end
+      *     of a namespace
+      *
+      *    parser = (input) XML parser to set the handler for
+      *       end = (input) procedure to call at the end. It must be
+      *             in this format:
+      *
+      *        D handler         PR
+      *        D   userdata                      *   value
+      *        D   prefix                        *   value
+      *-----------------------------------------------------------------
+     D XML_SetEndNamespaceDeclHandler...
+     D                 PR                  extproc('XML_SetEndNamespace-
+     D                                     DeclHandler')
+     D   parser                            like(XML_Parser) value
+     D   end                           *   procptr value

@@ -1,0 +1,864 @@
+     /*-                                                                            +
+      * Copyright (c) 2012-2023 Thomas Raddatz                                      +
+      * All rights reserved.                                                        +
+      *                                                                             +
+      * Redistribution and use in source and binary forms, with or without          +
+      * modification, are permitted provided that the following conditions          +
+      * are met:                                                                    +
+      * 1. Redistributions of source code must retain the above copyright           +
+      *    notice, this list of conditions and the following disclaimer.            +
+      * 2. Redistributions in binary form must reproduce the above copyright        +
+      *    notice, this list of conditions and the following disclaimer in the      +
+      *    documentation and/or other materials provided with the distribution.     +
+      *                                                                             +
+      * THIS SOFTWARE IS PROVIDED BY THE AUTHOR AND CONTRIBUTORS ''AS IS'' AND      +
+      * ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE       +
+      * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE  +
+      * ARE DISCLAIMED.  IN NO EVENT SHALL THE AUTHOR OR CONTRIBUTORS BE LIABLE     +
+      * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL  +
+      * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS     +
+      * OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)       +
+      * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT  +
+      * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY   +
+      * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF      +
+      * SUCH DAMAGE.                                                                +
+      *                                                                             +
+      */                                                                            +
+      *=====================================================================*
+      *  NTLM: Authentication Plugin - Private                              *
+      *=====================================================================*
+      /IF NOT DEFINED(NTLM_P)
+      /DEFINE NTLM_P
+      *
+      *  Boolean values
+     D cTrue           C                   *on
+     D cFalse          C                   *off
+      *
+      *  Domain
+     D ntlm_domain_t...
+     D                 S            512A   varying                 based(pDummy)
+      *
+      *  Host
+     D ntlm_host_t...
+     D                 S            512A   varying                 based(pDummy)
+      *
+      *  Workstation
+     D ntlm_workstation_t...
+     D                 S            512A   varying                 based(pDummy)
+      *
+      *  Message
+     D ntlm_message_t...
+     D                 S           2048A   varying                 based(pDummy)
+      *
+     D ntlm_challenge_t...
+     D                 S              8A                           based(pDummy)
+      *
+     D ntlm_targetName_t...
+     D                 S           1024C   varying                 based(pDummy)
+      *
+     D ntlm_targetType_t...
+     D                 S             10I 0                         based(pDummy)
+      *
+     D ntlm_user_t...
+     D                 S            124A   varying                 based(pDummy)
+     D ntlm_password_t...
+     D                 S           1024A   varying                 based(pDummy)
+     D ntlm_lmResponse_t...
+     D                 S             24A   varying                 based(pDummy)
+     D ntlm_ntResponse_t...
+     D                 S             24A   varying                 based(pDummy)
+     D ntlm_ntlmResponse_t...
+     D                 S           2048A   varying                 based(pDummy)
+     D ntlm_sessionKey_t...
+     D                 S             16A   varying                 based(pDummy)
+      *
+     D errCode_t       DS                  qualified               based(pDummy)
+     D  bytPrv                       10I 0
+     D  bytAvl                       10I 0
+      *
+      /IF NOT DEFINED(qJob_t    )
+      /DEFINE qJob_t
+      *   Qualified job name
+     D qJob_t          DS                  qualified           based(pDummy)
+     D  name                         10A
+     D  user                         10A
+     D  nbr                           6A
+      /ENDIF
+      *
+     D MILLISECONFS_BETWEEN_1970_AND_1601...
+     D                 C                   11644473600000
+      *
+      *  LM Compatibility Modes:
+      *    0 -- Sends NTLMv1 response. That may also include the weak
+      *         LM response.
+      *    1 -- Sends only the NTLM response. This is more secure than
+      *         Levels 0, because it eliminates the cryptographically-weak
+      *         LM response.
+      *    2 -- Sends only the NTLM2 response.
+      *    3 -- Sends LMv2 and NTLMv2 data.
+      *         Session security is not yet supported.
+      *         This is the default mode.
+     D DEFAULT_LM_COMPATIBILITY_MODE...
+     D                 C                   3
+      *
+     D LM_MODE_NTLM_V1...
+     D                 C                   0
+     D LM_MODE_NTLM_V1_NO_LM...
+     D                 C                   1
+     D LM_MODE_NTLM_V1_NTLM2_ONLY...
+     D                 C                   2
+     D LM_MODE_NTLM_V2...
+     D                 C                   3
+      *
+      *  Message types
+     D NEGOTIATE_MESSAGE...
+     D                 C                   x'00000001'
+     D CHALLENGE_MESSAGE...
+     D                 C                   x'00000002'
+     D AUTHENTICATE_MESSAGE...
+     D                 C                   x'00000003'
+      *
+      *  Negotiate flags
+     D NTLMSSP_NEGOTIATE_UNICODE...
+     D                 C                   1                                    x'00000001'
+     D NTLMSSP_NEGOTIATE_OEM...
+     D                 C                   2                                    x'00000002'
+     D NTLMSSP_REQUEST_TARGET...
+     D                 C                   4                                    x'00000004'
+     D NTLMSSP_UNUSED_R9...
+     D                 C                   8                                    x'00000008'
+     D NTLMSSP_NEGOTIATE_SIGN...
+     D                 C                   16                                   x'00000010'
+     D NTLMSSP_NEGOTIATE_SEAL...
+     D                 C                   32                                   x'00000020'
+     D NTLMSSP_NEGOTIATE_DATAGRAM...
+     D                 C                   64                                   x'00000040'
+     D NTLMSSP_NEGOTIATE_LM_KEY...
+     D                 C                   128                                  x'00000080'
+     D NTLMSSP_UNUSED_R8...
+     D                 C                   256                                  x'00000100'
+     D NTLMSSP_NEGOTIATE_NTLM...
+     D                 C                   512                                  x'00000200'
+     D NTLMSSP_NEGOTIATE_NT_ONLY...
+     D                 C                   1024                                 x'00000400'
+     D NTLMSSP_NEGOTIATE_CONNECTION_ANONYMOUS...
+     D                 C                   2048                                 x'00000800'
+     D NTLMSSP_NEGOTIATE_OEM_DOMAIN_SUPPLIED...
+     D                 C                   4096                                 x'00001000'
+     D NTLMSSP_NEGOTIATE_OEM_WORKSTATION_SUPPLIED...
+     D                 C                    8192                                x'00002000'
+     D NTLMSSP_UNUSED_R6...
+     D                 C                   16384                                x'00004000'
+     D NTLMSSP_NEGOTIATE_ALWAYS_SIGN...
+     D                 C                   32768                                x'00008000'
+     D NTLMSSP_TARGET_TYPE_DOMAIN...
+     D                 C                   65536                                x'00010000'
+     D NTLMSSP_TARGET_TYPE_SERVER...
+     D                 C                   131072                               x'00020000'
+     D NTLMSSP_TARGET_TYPE_SHARE...
+     D                 C                   262144                               x'00040000'
+     D NTLMSSP_NEGOTIATE_NTLM2...
+     D                 C                   524288                               x'00080000'
+     D NTLMSSP_NEGOTIATE_IDENTIFY...
+     D                 C                   1048576                              x'00100000'
+     D NTLMSSP_UNUSED_R5...
+     D                 C                   2097152                              x'00200000'
+     D NTLMSSP_REQUEST_NON_NT_SESSION_KEY...
+     D                 C                   4194304                              x'00400000'
+     D NTLMSSP_NEGOTIATE_TARGET_INFO...
+     D                 C                   8388608                              x'00800000'
+     D NTLMSSP_UNUSED_R4...
+     D                 C                   33554432                             x'01000000'
+      * The VERSION structure contains Windows version information that SHOULD
+      * be ignored. This structure is used for debugging purposes only and its
+      * value does not affect NTLM message.
+     D NTLMSSP_NEGOTIATE_VERSION...
+     D                 C                   33554432                             x'02000000'
+     D NTLMSSP_UNUSED_R3...
+     D                 C                   67108864                             x'04000000'
+     D NTLMSSP_UNUSED_R2...
+     D                 C                   134217728                            x'08000000'
+      *
+     D NTLMSSP_UNUSED_R1...
+     D                 C                   536870912                            x'10000000'
+     D NTLMSSP_NEGOTIATE_128...
+     D                 C                   536870912                            x'20000000'
+     D NTLMSSP_NEGOTIATE_KEY_EXCH...
+     D                 C                   1073741824                           x'40000000'
+     D NTLMSSP_NEGOTIATE_56...
+     D                 C                   2147483648                           x'80000000'
+      *
+      *  Message structures
+     D NtLmMessage_t...
+     D                 DS                  qualified               based(pDummy)
+     D  signature                     8A
+     D  type                         10U 0
+      *
+      *  Message structures
+     D NtLmNegotiate_t...
+     D                 DS                  qualified               based(pDummy)
+     D  signature                     8A
+     D  type                         10U 0
+     D  flags                        10U 0
+     D  domain                             likeds(ntlm_securityBuffer_t )
+     D  workstation                        likeds(ntlm_securityBuffer_t )
+     D  os_version                         likeds(os_version_t)
+      * domain              char(*)
+      * workstation         char(*)
+      *
+     D ntlm_securityBuffer_t...
+     D                 DS                  qualified               based(pDummy)
+     D  length                        5U 0
+     D  maxLen                        5U 0
+     D  offset                       10U 0
+      *
+     D NtLmChallenge_t...
+     D                 DS                  qualified               based(pDummy)
+     D  signature                     8A
+     D  type                         10U 0
+     D  targetName                         likeds(ntlm_securityBuffer_t )
+     D  flags                        10U 0
+     D  challenge                          like(ntlm_challenge_t)
+     D  reserved                      8A
+     D  targetInfo                         likeds(ntlm_securityBuffer_t )
+     D  os_version                         likeds(os_version_t)
+      * targetInfoFields    byte(8)
+      * version             byte(8)
+      * payload             char(*)
+      *
+     D targetNameChars_t...
+     D                 DS                  qualified               based(pDummy)
+     D  unicode                    1024C
+     D  value                      2048A   overlay(unicode)
+      *
+     D targetInfo_t...
+     D                 DS                  qualified               based(pDummy)
+     D  type                          5U 0
+     D  length                        5U 0
+     D  unicode                    1024C
+     D  value                      2048A   overlay(unicode)
+      *
+     D os_version_t...
+     D                 DS                  qualified               based(pDummy)
+     D  major                         3U 0
+     D  minor                         3U 0
+     D  build                         5U 0
+     D  reserved_1                    3A
+     D  NTLM_rev                      3U 0
+      *
+      * Target information types
+     D NTLM_TARGET_TYPE_NONE...
+     D                 C                   0
+     D NTLM_TARGET_TYPE_NB_COMPUTER_NAME...
+     D                 C                   1
+     D NTLM_TARGET_TYPE_NB_DOMAIN_NAME...
+     D                 C                   2
+     D NTLM_TARGET_TYPE_DNS_COMPUTER_NAME...
+     D                 C                   3
+     D NTLM_TARGET_TYPE_DNS_DOMAIN_NAME...
+     D                 C                   4
+     D NTLM_TARGET_TYPE_DNS_TREE_NAME...
+     D                 C                   5
+     D NTLM_TARGET_TYPE_FLAGS...
+     D                 C                   6
+     D NTLM_TARGET_TYPE_TIMESTAMP...
+     D                 C                   7
+     D NTLM_TARGET_TYPE_RESTRICTIONS...
+     D                 C                   8
+      *
+     D NtLmAuthenticate_t...
+     D                 DS                  qualified               based(pDummy)
+     D  signature                     8A
+     D  type                         10U 0
+     D  LM_resp                            likeds(ntlm_securityBuffer_t )
+     D  NTLM_resp                          likeds(ntlm_securityBuffer_t )
+     D  targetName                         likeds(ntlm_securityBuffer_t )
+     D  userName                           likeds(ntlm_securityBuffer_t )
+     D  workstation                        likeds(ntlm_securityBuffer_t )
+     D  sessionKey                         likeds(ntlm_securityBuffer_t )
+     D  flags                        10U 0
+    R * os_version                         like(os_version_t       )
+      *   Target Name Data ("DOMAIN")
+      *   User Name Data ("user")
+      *   Workstation Name Data ("WORKSTATION")
+      *   LM Response Data
+      *   NTLM Response Data
+      *
+      * Negotiation status
+     D NTLM_NONE       C                   0
+     D NTLM_NEGOTIATE...
+     D                 C                   1
+     D NTLM_AUTHENTICATE...
+     D                 C                   2
+      *
+      * Error codes
+     D NTLM_EINV_TYPE1_MSG...
+     D                 C                   1
+     D NTLM_EINV_TYPE2_MSG...
+     D                 C                   2
+     D NTLM_EINV_TYPE3_MSG...
+     D                 C                   3
+     D NTLM_EINV_ENCODING...
+     D                 C                   4
+     D NTLM_ENSUP_ENCODING...
+     D                 C                   5
+      *
+      * - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+      *   Protected Prototypes of NTLM
+      * - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+      *
+      *  Transcoder handle.
+     D hTranscoder_t   S               *                           based(pDummy)
+      *
+      *  Enables Test Mode for RPGUnit Test Cases
+     D NTLM_enableTestMode...
+     D                 PR
+     D                                     extproc('NTLMR4_+
+     D                                     NTLM_enableTestMode+
+     D                                     ')
+     D  i_mode                         N   const
+      *
+      *  Sets the LM compatibility mode.
+      *
+      *    0,1 -- Sends LM and NTLM responses.
+      *      2 -- Sends only the NTLM response.
+      *           This is more secure than Levels 0 and 1, because it
+      *           eliminates the cryptographically-weak LM response.
+      *  3,4,5 -- Sends LMv2 and NTLMv2 data.
+      *           NTLMv2 session security is not yet supported.
+     D NTLM_setLMCompatibility...
+     D                 PR
+     D                                     extproc('NTLMR4_+
+     D                                     NTLM_setLMCompatibility+
+     D                                     ')
+     D  i_mode                       10I 0 const  options(*nopass)
+      *
+      *  Produces a Type-1 message
+      *
+      *  i_flags          Message flags. 0=use default flags.
+      *  i_workstation    Workstation name of the client.
+      *  i_domain         Name of the domain in which the workstation has
+      *                   membership.
+     D Message_newType1...
+     D                 PR                         like(ntlm_message_t )
+     D                                     extproc('NTLMR4_+
+     D                                     Message_newType1+
+     D                                     ')
+     D  i_flags                      10U 0 const  options(*nopass: *omit)
+     D  i_workstation                      const  like(ntlm_workstation_t )
+     D                                            options(*varsize:
+     D                                                    *nopass: *omit)
+     D  i_domain                           const  like(ntlm_domain_t  )
+     D                                            options(*varsize:
+     D                                                    *nopass: *omit)
+      *
+      *  Validates a Type-2 message.
+      *
+      *  i_type1Msg       Type-1 message that was sent to the server.
+      *  i_type2Msg       Type-2 message responded by the server.
+     D Message_validateType2...
+     D                 PR              N
+     D                                     extproc('NTLMR4_+
+     D                                     Message_validateType2+
+     D                                     ')
+     D  i_type1Msg                                like(ntlm_message_t )
+     D                                            options(*varsize)
+     D  i_type2Msg                                like(ntlm_message_t )
+     D                                            options(*varsize)
+     D  o_rc                         10I 0        options(*nopass)
+      *
+      *  Produces a Type-3 message:   NtLmResponse
+      *
+      *  i_type2Msg       Type-2 message responded by the server.
+      *  i_user           The username for the authenticating user.
+      *  i_password       The password to use when constructing the response.
+      *  i_domain         The domain in which the user has an account.
+     D Message_newType3...
+     D                 PR                         like(ntlm_message_t )
+     D                                     extproc('NTLMR4_+
+     D                                     Message_newType3+
+     D                                     ')
+     D  i_type2Msg                                like(ntlm_message_t )
+     D                                            options(*varsize)
+     D  i_user                             const  like(ntlm_user_t     )
+     D                                            options(*varsize)
+     D  i_password                         const  like(ntlm_password_t )
+     D                                            options(*varsize)
+     D  i_domain                           const  like(ntlm_domain_t   )
+     D                                            options(*varsize
+     D                                                    : *omit: *nopass)
+      *
+      *  Returns cTrue if the specified message is a Type 1 message.
+      *
+      *  i_message        Message, that is tested for a Type-1 message.
+     D Message_isType1...
+     D                 PR              N
+     D                                     extproc('NTLMR4_+
+     D                                     Message_isType1+
+     D                                     ')
+     D  i_message                          const  like(ntlm_message_t )
+     D                                            options(*varsize)
+      *
+      *  Returns cTrue if the specified message is a Type 2 message.
+      *
+      *  i_message        Message, that is tested for a Type-2 message.
+     D Message_isType2...
+     D                 PR              N
+     D                                     extproc('NTLMR4_+
+     D                                     Message_isType2+
+     D                                     ')
+     D  i_message                          const  like(ntlm_message_t )
+     D                                            options(*varsize)
+      *
+      *  Returns cTrue if the specified message is a Type 3 message.
+      *
+      *  i_message        Message, that is tested for a Type-3 message.
+     D Message_isType3...
+     D                 PR              N
+     D                                     extproc('NTLMR4_+
+     D                                     Message_isType3+
+     D                                     ')
+     D  i_message                          const  like(ntlm_message_t )
+     D                                            options(*varsize)
+      *
+      *  Returns the challenge for a given Type-2 message.
+      *
+      *  i_type2Msg       Message, whose challenge is returned.
+     D Message_getChallenge...
+     D                 PR                         like(ntlm_challenge_t)
+     D                                     extproc('NTLMR4_+
+     D                                     Message_getChallenge+
+     D                                     ')
+     D  i_message                                 like(ntlm_message_t )
+     D                                            options(*varsize)
+      *
+      *  Returns cTrue if the specified flag is set in a given message.
+      *
+      *  i_message        Message, that is tested for a given flag.
+      *  i_flag           Flag, the message is tested for.
+     D Message_hasFlag...
+     D                 PR              N
+     D                                     extproc('NTLMR4_+
+     D                                     Message_hasFlag+
+     D                                     ')
+     D  i_message                          const  like(ntlm_message_t )
+     D                                            options(*varsize)
+     D  i_flag                       10U 0 const
+      *
+      *  Returns the server's NetBIOS computer name.
+      *
+      *  i_type2Msg       Message, the NetBIOS computer name is
+      *                   retrieved from.
+     D Message_getTargetNBComputerName...
+     D                 PR                         like(ntlm_targetName_t)
+     D                                     extproc('NTLMR4_+
+     D                                     Message_getTargetNBComputerName+
+     D                                     ')
+     D  i_type2Msg                                like(ntlm_message_t   )
+     D                                            options(*varsize)
+      *
+      *  Returns the server's NetBIOS domain name.
+      *
+      *  i_type2Msg       Message, the NetBIOS domain name is
+      *                   retrieved from.
+     D Message_getTargetNBDomainName...
+     D                 PR                         like(ntlm_targetName_t)
+     D                                     extproc('NTLMR4_+
+     D                                     Message_getTargetNBDomainName+
+     D                                     ')
+     D  i_type2Msg                                like(ntlm_message_t   )
+     D                                            options(*varsize)
+      *
+      *  Returns the server's Active Directory DNS computer name.
+      *
+      *  i_type2Msg       Message, the Active Directory DNS computer name
+      *                   retrieved from.
+     D Message_getTargetDNSComputerName...
+     D                 PR                         like(ntlm_targetName_t)
+     D                                     extproc('NTLMR4_+
+     D                                     Message_getTargetDNSComputerName+
+     D                                     ')
+     D  i_type2Msg                                like(ntlm_message_t   )
+     D                                            options(*varsize)
+      *
+      *  Returns the server's Active Directory DNS domain name.
+      *
+      *  i_type2Msg       Message, the Active Directory DNS domain name
+      *                   retrieved from.
+     D Message_getTargetDNSDomainName...
+     D                 PR                         like(ntlm_targetName_t)
+     D                                     extproc('NTLMR4_+
+     D                                     Message_getTargetDNSDomainName+
+     D                                     ')
+     D  i_type2Msg                                like(ntlm_message_t   )
+     D                                            options(*varsize)
+      *
+      *  Returns server's Active Directory (AD) DNS forest tree name.
+      *
+      *  i_type2Msg       Message, the Active Directory DNS forest tree name
+      *                   retrieved from.
+     D Message_getTargetDNSTreeName...
+     D                 PR                         like(ntlm_targetName_t)
+     D                                     extproc('NTLMR4_+
+     D                                     Message_getTargetDNSTreeName+
+     D                                     ')
+     D  i_type2Msg                                like(ntlm_message_t   )
+     D                                            options(*varsize)
+      *
+      *  Encodes a given message to Base64.
+      *
+      *  i_message        Message material that is encoded to Base64.
+     D Message_encodeBase64...
+     D                 PR                         like(ntlm_message_t )
+     D                                     extproc('NTLMR4_+
+     D                                     Message_encodeBase64+
+     D                                     ')
+     D  i_message                          const  like(ntlm_message_t )
+     D                                            options(*varsize)
+      *
+      *  Decodes a given message from Base64.
+      *
+      *  i_message        Base64 encoded message that is decoded to
+      *                   its binary form.
+     D Message_decodeBase64...
+     D                 PR                         like(ntlm_message_t )
+     D                                     extproc('NTLMR4_+
+     D                                     Message_decodeBase64+
+     D                                     ')
+     D  i_message                          const  like(ntlm_message_t )
+     D                                            options(*varsize)
+      *
+      *  Removes user and password from a given URL.
+     D removeAuthFromUrl...
+     D                 PR         32767A          varying
+     D                                     extproc('NTLMR4_+
+     D                                     removeAuthFromUrl+
+     D                                     ')
+     D   i_URL                    32767A   const  varying options(*varsize)
+      *
+      *  Constructs the LanManager response to the given Type-2 message
+      *  using the supplied password and server challenge.
+     D getLMResponse...
+     D                 PR                         like(ntlm_lmResponse_t)
+     D                                     extproc('NTLMR4_+
+     D                                     getLMResponse+
+     D                                     ')
+     D  i_NtLmChallenge...
+     D                                     const  likeds(NtLmChallenge_t)
+     D  i_password                         const  like(ntlm_password_t  )
+      *
+      *  Constructs the NT response to the given Type-2 message
+      *  using the supplied password and server challenge.
+     D getNTResponse...
+     D                 PR                         like(ntlm_ntResponse_t)
+     D                                     extproc('NTLMR4_+
+     D                                     getNTResponse+
+     D                                     ')
+     D  i_NtLmChallenge...
+     D                                     const  likeds(NtLmChallenge_t)
+     D  i_password                         const  like(ntlm_password_t  )
+      *
+      *  Constructs the NTLM2 response to the given Type-2 message
+      *  using the supplied NT response key (NTOWFv1) and challenges.
+     D getNTLM2Response...
+     D                 PR                         like(ntlm_ntResponse_t)
+     D                                     extproc('NTLMR4_+
+     D                                     getNTLM2Response+
+     D                                     ')
+     D  i_password                         const  like(ntlm_password_t  )
+     D                                            options(*varsize)
+     D  i_serverChallenge...
+     D                                     const  like(ntlm_challenge_t )
+     D  i_clientChallenge...
+     D                                     const  like(ntlm_challenge_t )
+      *
+      *  Constructs the LMv2 response to the given Type-2 message
+      *  using the supplied information.
+     D getLMv2Response...
+     D                 PR                         like(ntlm_lmResponse_t)
+     D                                     extproc('NTLMR4_+
+     D                                     getLMv2Response+
+     D                                     ')
+     D  i_NtLmChallenge...
+     D                                            likeds(NtLmChallenge_t)
+     D  i_domain                           const  like(ntlm_domain_t    )
+     D  i_user                             const  like(ntlm_user_t      )
+     D  i_password                         const  like(ntlm_password_t  )
+     D  i_clientChallenge...
+     D                                     const  like(ntlm_challenge_t )
+      *
+      *  Constructs the NTLMv2 response to the given Type-2 message
+      *  using the supplied information.
+     D getNTLMv2Response...
+     D                 PR                         like(ntlm_ntlmResponse_t)
+     D                                     extproc('NTLMR4_+
+     D                                     getNTLMv2Response+
+     D                                     ')
+     D  i_NtLmChallenge...
+     D                                            likeds(NtLmChallenge_t)
+     D  i_respKeyNT                        const  like(MD5_digest_t     )
+     D  i_clientChallenge...
+     D                                     const  like(ntlm_challenge_t )
+      *
+      *  Creates the NTLMv2 response for the supplied information.
+     D computeResponse...
+     D                 PR                         like(ntlm_ntlmResponse_t)
+     D                                     extproc('NTLMR4_+
+     D                                     computeResponse+
+     D                                     ')
+     D  i_respKeyNT                        const  like(MD5_digest_t     )
+     D  i_serverChallenge...
+     D                                     const  like(ntlm_challenge_t )
+     D  i_clientData               2048A   const
+     D  i_length                     10I 0 const
+      *
+      *  Calculate the key used in NTLM v1 authentication.
+     D NTOWFv1...
+     D                 PR                         like(MD4_digest_t    )
+     D                                     extproc('NTLMR4_+
+     D                                     NTOWFv1+
+     D                                     ')
+     D  i_password                         const  like(ntlm_password_t )
+     D                                            options(*varsize)
+      *
+      *  Calculate the key used in NTLM v2 authentication.
+     D NTOWFv2...
+     D                 PR                         like(MD5_digest_t    )
+     D                                     extproc('NTLMR4_+
+     D                                     NTOWFv2+
+     D                                     ')
+     D  i_password                         const  like(ntlm_password_t )
+     D                                            options(*varsize)
+     D  i_user                             const  like(ntlm_user_t     )
+     D                                            options(*varsize)
+     D  i_domain                           const  like(ntlm_domain_t   )
+     D                                            options(*varsize)
+      *
+      *  Converts a given EBCDIC string to ASCII.
+     D toAscii...
+     D                 PR          2048A          varying
+     D                                     extproc('NTLMR4_+
+     D                                     toAscii+
+     D                                     ')
+     D  i_ebcdic                   2048A   const  varying
+      *
+      *  Frees the resources allocated by the ASCII transcoder.
+     D freeAsciiTranscoder...
+     D                 PR
+      *
+      *  Converts a given EBCDIC string to UNICODE.
+     D toUniCode...
+     D                 PR          4096A          varying
+     D                                     extproc('NTLMR4_+
+     D                                     toUnicode+
+     D                                     ')
+     D  i_ebcdic                   2048A   const  varying
+      *
+      *  Frees the resources allocated by the UNICODE transcoder.
+     D freeUnicodeTranscoder...
+     D                 PR
+      *
+      *  Returns cTrue if the specified bit is set.
+     D isBit...
+     D                 PR              N
+     D                                     extproc('NTLMR4_+
+     D                                     isBit+
+     D                                     ')
+     D  i_value                      20U 0 const
+     D  i_bit                        20U 0 const
+      *
+      *  Returns the bit-wise ANDing of the bits of all the arguments.
+     D bitand...
+     D                 PR            20U 0
+     D                                     extproc('NTLMR4_+
+     D                                     bitand+
+     D                                     ')
+     D  i_source1                    20U 0 value
+     D  i_source2                    20U 0 value
+      *
+      *  Returns the bit-wise ANDing of the bits of all the arguments.
+     D byteand...
+     D                 PR             1A
+     D                                     extproc('NTLMR4_+
+     D                                     byteand+
+     D                                     ')
+     D  i_source1                     1A   value
+     D  i_source2                     1A   value
+      *
+      *  Returns the bit-wise ORing of the bits of all the arguments.
+     D bitor...
+     D                 PR            20U 0
+     D                                     extproc('NTLMR4_+
+     D                                     bitor+
+     D                                     ')
+     D  i_source1                    20U 0 value
+     D  i_source2                    20U 0 value
+      *
+      *  Returns the bit-wise ORing of the bits of all the arguments.
+     D byteor...
+     D                 PR             1A
+     D                                     extproc('NTLMR4_+
+     D                                     byteor+
+     D                                     ')
+     D  i_source1                     1A   value
+     D  i_source2                     1A   value
+      *
+      *  Converts a 2-byte integer to little-endian format.
+     D uint16LE...
+     D                 PR             5U 0
+     D                                     extproc('NTLMR4_+
+     D                                     uint16LE+
+     D                                     ')
+     D  i_int2                        5U 0 const
+      *
+      *  Converts a 4-byte integer to little-endian format.
+     D uint32LE...
+     D                 PR            10U 0
+     D                                     extproc('NTLMR4_+
+     D                                     uint32LE+
+     D                                     ')
+     D  i_int4                       10U 0 const
+      *
+      *  Converts a 8-byte integer to little-endian format.
+     D uint64LE...
+     D                 PR            20U 0
+     D                                     extproc('NTLMR4_+
+     D                                     uint64LE+
+     D                                     ')
+     D  i_int8                       20U 0 const
+      *
+      *  Converts a string value to little-endian format.
+     D stringLE...
+     D                 PR          1024A          varying
+     D                                     extproc('NTLMR4_+
+     D                                     stringLE+
+     D                                     ')
+     D  i_string                   1024A          options(*varsize)
+     D  i_length                     10I 0 const
+      *
+      *  Converts a string value to little-endian format.
+     D varstringLE...
+     D                 PR          1024A          varying
+     D                                     extproc('NTLMR4_+
+     D                                     varstringLE+
+     D                                     ')
+     D  i_string                   1024A   const  varying options(*varsize)
+      *
+      *  Returns a random 8-byte challenge.
+     D random...
+     D                 PR                  opdesc
+     D                                     extproc('NTLMR4_+
+     D                                     random+
+     D                                     ')
+     D  o_random                    128A          options(*varsize)
+     D  i_isTestMode                   N   const  options(*nopass)
+      *
+      *  Converts a given string to upper case.
+     D toUpper...
+     D                 PR          1024A          varying
+     D                                     extproc('NTLMR4_+
+     D                                     toUpper+
+     D                                     ')
+     D  i_string                   1024A   const  varying
+      *
+      *  Converts a given string to lower case.
+     D toLower...
+     D                 PR          1024A          varying
+     D                                     extproc('NTLMR4_+
+     D                                     toLower+
+     D                                     ')
+     D  i_string                   1024A   const  varying
+      *
+      *  Returns the next token from a list of tokens.
+     D getToken...
+     D                 PR          2048A          varying
+     D                                     extproc('NTLMR4_+
+     D                                     getToken+
+     D                                     ')
+     D  i_tokens                   2048A   const  varying options(*omit)
+     D  i_delimiters                 16A   const  varying
+      *
+      * - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+      *   Protected Prototypes of RC4 encryption
+      * - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+     D RC4_key_t       S             16A   varying                 based(pDummy)
+      *
+      *  Returns the RC4 encypted value of a given string.
+     D RC4...
+     D                 PR          4096A          varying
+     D                                     extproc('ENCRYPTR4_+
+     D                                     RC4+
+     D                                     ')
+     D  i_key                              const  like(RC4_key_t   )
+     D  i_string                   4096A          varying options(*varsize)
+      /IF NOT DEFINED(RC4_INTERNAL_USE)
+     D                                     const
+      /ENDIF
+      *
+      * - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+      *   Protected Prototypes of DES encryption
+      * - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+     D DES_key_t       S              8A                           based(pDummy)
+      *
+      *  Returns the DES digest of a given string.
+     D DES...
+     D                 PR          4096A          varying
+     D                                     extproc('ENCRYPTR4_+
+     D                                     DES+
+     D                                     ')
+     D  i_string                   4096A   const  varying options(*varsize)
+     D  i_challenge                        const  like(ntlm_challenge_t )
+      *
+      *  Produces a DES key for a given 7-byte value.
+     D DES_produceKey...
+     D                 PR                         like(DES_key_t )
+     D                                     extproc('ENCRYPTR4_+
+     D                                     DES_produceKey+
+     D                                     ')
+     D  i_value                       7A   const
+      *
+      * - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+      *   Protected Prototypes of MD4 encryption
+      * - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+      /COPY MD4_H
+      *
+      *  Returns the MD4 digest of a given string.
+     D MD4...
+     D                 PR                         like(MD4_digest_t)
+     D                                     extproc('ENCRYPTR4_+
+     D                                     MD4+
+     D                                     ')
+     D  i_string                   4096A          varying options(*varsize)
+      /IF NOT DEFINED(MD4_INTERNAL_USE)
+     D                                     const
+      /ENDIF
+      *
+      * - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+      *   Protected Prototypes of MD5 hmac and digest
+      * - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+     D MD5_digest_t    S             16A                           based(pDummy)
+      *
+      *  Returns the MD5 digest of a given string.
+     D MD5Hmac...
+     D                 PR                         like(MD5_digest_t)
+     D                                     extproc('ENCRYPTR4_+
+     D                                     MD5Hmac+
+     D                                     ')
+     D  i_hmacKey                          const  like(MD5_digest_t)
+     D  i_string                   4096A          varying options(*varsize)
+      /IF NOT DEFINED(MD5_INTERNAL_USE)
+     D                                     const
+      /ENDIF
+      *
+      *  Returns the MD5 digest of a given string.
+     D MD5Digest...
+     D                 PR                         like(MD5_digest_t)
+     D                                     extproc('ENCRYPTR4_+
+     D                                     MD5Digest+
+     D                                     ')
+     D  i_string                   4096A          varying options(*varsize)
+      /IF NOT DEFINED(MD5_INTERNAL_USE)
+     D                                     const
+      /ENDIF
+      *
+      /ENDIF

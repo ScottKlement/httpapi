@@ -1,0 +1,127 @@
+     /*-                                                                            +
+      * Copyright (c) 2004-2023 Scott C. Klement                                    +
+      * All rights reserved.                                                        +
+      *                                                                             +
+      * Redistribution and use in source and binary forms, with or without          +
+      * modification, are permitted provided that the following conditions          +
+      * are met:                                                                    +
+      * 1. Redistributions of source code must retain the above copyright           +
+      *    notice, this list of conditions and the following disclaimer.            +
+      * 2. Redistributions in binary form must reproduce the above copyright        +
+      *    notice, this list of conditions and the following disclaimer in the      +
+      *    documentation and/or other materials provided with the distribution.     +
+      *                                                                             +
+      * THIS SOFTWARE IS PROVIDED BY THE AUTHOR AND CONTRIBUTORS ''AS IS'' AND      +
+      * ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE       +
+      * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE  +
+      * ARE DISCLAIMED.  IN NO EVENT SHALL THE AUTHOR OR CONTRIBUTORS BE LIABLE     +
+      * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL  +
+      * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS     +
+      * OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)       +
+      * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT  +
+      * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY   +
+      * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF      +
+      * SUCH DAMAGE.                                                                +
+      */                                                                            +
+
+      *
+      * Generic communications driver interface for HTTPAPI
+      *
+
+      /if defined(COMM_H)
+      /eof
+      /endif
+      /define COMM_H
+
+      *-----------------------------------------------------------------
+      *  commDriver:  Communications driver data structure
+      *-----------------------------------------------------------------
+     D p_CommDriver    s               *   inz(*NULL)
+     D commDriver      ds                  based(p_CommDriver)
+     D    p_CommResolve...
+     D                                 *   procptr
+     D    p_CommConnect...
+     D                                 *   procptr
+     D    p_CommUpgrade...
+     D                                 *   procptr
+     D    p_CommRead...
+     D                                 *   procptr
+     D    p_CommBlockRead...
+     D                                 *   procptr
+     D    p_CommBlockWrite...
+     D                                 *   procptr
+     D    p_CommLineRead...
+     D                                 *   procptr
+     D    p_CommLineWrite...
+     D                                 *   procptr
+     D    p_CommHangup...
+     D                                 *   procptr
+     D    p_CommCleanup...
+     D                                 *   procptr
+
+     D p_commNew       s               *   procptr
+     D comm_New...
+     D                 PR              *   extproc(p_CommNew)
+
+     D comm_Resolve...
+     D                 PR              *   extproc(p_CommResolve)
+     D   handle                        *   value
+     D   host                          *   value options(*string)
+     D   service                       *   value options(*string)
+     D   port                        10I 0 value
+     D   forced                       1N   const
+
+     D comm_Connect...
+     D                 PR             1N   extproc(p_CommConnect)
+     D   handle                        *   value
+     D   AddrInfo                      *   value
+     D   timeout                     10P 3 value
+
+     D comm_Upgrade...
+     D                 PR             1N   extproc(p_CommUpgrade)
+     D   handle                        *   value
+     D   timeout                     10P 3 value
+     D   endHost                       *   value options(*string)
+
+     D comm_Read...
+     D                 PR            10I 0 extproc(p_CommRead)
+     D   handle                        *   value
+     D   buffer                        *   value
+     D   bufsize                     10I 0 value
+     D   timeout                     10P 3 value
+
+     D comm_BlockRead...
+     D                 PR            10I 0 extproc(p_CommBlockRead)
+     D   handle                        *   value
+     D   buffer                        *   value
+     D   bufsize                     10I 0 value
+     D   timeout                     10P 3 value
+
+     D comm_BlockWrite...
+     D                 PR            10I 0 extproc(p_CommBlockWrite)
+     D   handle                        *   value
+     D   buffer                        *   value
+     D   bufsize                     10I 0 value
+     D   timeout                     10P 3 value
+
+     D comm_LineRead...
+     D                 PR            10I 0 extproc(p_CommLineRead)
+     D   handle                        *   value
+     D   buffer                        *   value
+     D   bufsize                     10I 0 value
+     D   timeout                     10P 3 value
+
+     D comm_LineWrite...
+     D                 PR            10I 0 extproc(p_CommLineWrite)
+     D   handle                        *   value
+     D   buffer                        *   value
+     D   bufsize                     10I 0 value
+     D   timeout                     10P 3 value
+
+     D comm_Hangup...
+     D                 PR             1N   extproc(p_CommHangup)
+     D   handle                        *   value
+
+     D comm_Cleanup...
+     D                 PR             1N   extproc(p_CommCleanup)
+     D   handle                        *   value

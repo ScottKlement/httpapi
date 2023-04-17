@@ -1,0 +1,920 @@
+/*-                                                                            +
+ * Copyright (c) 2001-2023 Scott C. Klement                                    +
+ * All rights reserved.                                                        +
+ *                                                                             +
+ * Redistribution and use in source and binary forms, with or without          +
+ * modification, are permitted provided that the following conditions          +
+ * are met:                                                                    +
+ * 1. Redistributions of source code must retain the above copyright           +
+ *    notice, this list of conditions and the following disclaimer.            +
+ * 2. Redistributions in binary form must reproduce the above copyright        +
+ *    notice, this list of conditions and the following disclaimer in the      +
+ *    documentation and/or other materials provided with the distribution.     +
+ *                                                                             +
+ * THIS SOFTWARE IS PROVIDED BY THE AUTHOR AND CONTRIBUTORS ''AS IS'' AND      +
+ * ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE       +
+ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE  +
+ * ARE DISCLAIMED.  IN NO EVENT SHALL THE AUTHOR OR CONTRIBUTORS BE LIABLE     +
+ * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL  +
+ * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS     +
+ * OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)       +
+ * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT  +
+ * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY   +
+ * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF      +
+ * SUCH DAMAGE.                                                                +
+ *                                                                             +
+ */                                                                            +
+
+PGM
+             DCL        VAR(&SRCLIB) TYPE(*CHAR) LEN(10) +
+                          VALUE('*LIBL')
+             DCL        VAR(&INSTLIB) TYPE(*CHAR) LEN(10) +
+                          VALUE('LIBHTTP')
+             DCL        VAR(&BINDLIB) TYPE(*CHAR) LEN(10) +
+                          VALUE('LIBHTTP')
+             DCL        VAR(&TGTRLS) TYPE(*CHAR) LEN(10) +
+                          VALUE('*CURRENT')
+
+             DCL        VAR(&RCVVAR) TYPE(*CHAR) LEN(32)
+             DCL        VAR(&RCVLEN) TYPE(*CHAR) LEN(4)
+             DCL        VAR(&PRODINFO) TYPE(*CHAR) LEN(27)
+             DCL        VAR(&ERRCODE) TYPE(*CHAR) LEN(8)
+             DCL        VAR(&VERSION) TYPE(*CHAR) LEN(6)
+             DCL        VAR(&CANCEL) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&HAVESSLAPI) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&BUILDSAMP) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&BNDSRC) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&BLDEXPAT) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&BLDXML) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&RMVLIB) TYPE(*LGL) VALUE('0')
+             DCL        VAR(&USELIBL) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&INSCMDZ) TYPE(*CHAR) LEN(8)
+             DCL        VAR(&INSLIBZ) TYPE(*CHAR) LEN(11)
+             DCL        VAR(&NULL) TYPE(*CHAR) LEN(1) VALUE(X'00')
+             DCL        VAR(&PRODID) TYPE(*CHAR) LEN(7)
+             DCL        VAR(&HAVEST1) TYPE(*CHAR) LEN(1) VALUE('Y')
+             DCL        VAR(&BLDNTLM) TYPE(*CHAR) LEN(1) VALUE('Y')
+
+             ADDLIBLE   LIB(QTEMP) POSITION(*LAST)
+             MONMSG     MSGID(CPF0000)
+
+  /* GET OS/400 VERSION */
+
+             CHGVAR VAR(%BIN(&RCVLEN  1 4)) VALUE(32)
+             CHGVAR VAR(%BIN(&ERRCODE 1 4)) VALUE(0)
+             CHGVAR VAR(%SST(&PRODINFO  1  7)) VALUE('*OPSYS')
+             CHGVAR VAR(%SST(&PRODINFO  8  6)) VALUE('*CUR'  )
+             CHGVAR VAR(%SST(&PRODINFO 14  4)) VALUE('0000'  )
+             CHGVAR VAR(%SST(&PRODINFO 18 10)) VALUE('*CODE' )
+
+             CALL PGM(QSZRTVPR) PARM(&RCVVAR    +
+                                     &RCVLEN    +
+                                     'PRDR0100' +
+                                     &PRODINFO  +
+                                     &ERRCODE   )
+
+             CHGVAR VAR(&PRODID)  VALUE(%SST(&RCVVAR 13 7))
+             CHGVAR VAR(&VERSION) VALUE(%SST(&RCVVAR 20 6))
+
+             IF (&TGTRLS *NE '*CURRENT') DO
+                 CHGVAR VAR(&VERSION) VALUE(&TGTRLS)
+             ENDDO
+
+
+  /* CHECK FOR EMBEDDED SQL PRECOMPILER */
+
+             CHGVAR VAR(&HAVEST1) VALUE('Y')
+             CHGVAR VAR(%BIN(&RCVLEN  1 4)) VALUE(32)
+             CHGVAR VAR(%BIN(&ERRCODE 1 4)) VALUE(0)
+             CHGVAR VAR(%SST(&PRODINFO  1  7)) VALUE(&PRODID)
+             CHGVAR VAR(%SST(&PRODINFO  5  3)) VALUE('ST1')
+             CHGVAR VAR(%SST(&PRODINFO  8  6)) VALUE('*CUR')
+             CHGVAR VAR(%SST(&PRODINFO 14  4)) VALUE('0000')
+             CHGVAR VAR(%SST(&PRODINFO 18 10)) VALUE('*CODE')
+
+             CALL PGM(QSZRTVPR) PARM(&RCVVAR    +
+                                     &RCVLEN    +
+                                     'PRDR0100' +
+                                     &PRODINFO  +
+                                     &ERRCODE   )
+             MONMSG MSGID(CPF0C1F) EXEC(DO)
+                CHGVAR VAR(&HAVEST1) VALUE('N')
+             ENDDO
+
+
+  /* ASK USER FOR CONFIG INFO */
+
+             CRTDSPF    FILE(QTEMP/CONFIGS) +
+                          SRCFILE(*LIBL/QDDSSRC)
+             DLTSPLF    FILE(CONFIGS) JOB(*) SPLNBR(*LAST)
+             MONMSG     MSGID(CPF3303) EXEC(DO)
+                RCVMSG MSGTYPE(*LAST) RMV(*YES)
+             ENDDO
+
+             CRTBNDRPG  PGM(QTEMP/CONFIGR4) +
+                          SRCFILE(*LIBL/QRPGLESRC) +
+                          DBGVIEW(*LIST) +
+                          TGTRLS(&TGTRLS)
+             DLTSPLF    FILE(CONFIGR4) JOB(*) SPLNBR(*LAST)
+             MONMSG     MSGID(CPF3303) EXEC(DO)
+                RCVMSG MSGTYPE(*LAST) RMV(*YES)
+             ENDDO
+
+             OVRDSPF    FILE(CONFIGS) TOFILE(QTEMP/CONFIGS) +
+                          OVRSCOPE(*CALLLVL)
+             CALL       PGM(CONFIGR4) PARM(&VERSION &CANCEL +
+                          &HAVESSLAPI &BUILDSAMP &BLDEXPAT +
+                          &BLDXML &SRCLIB &INSTLIB &USELIBL +
+                          &BLDNTLM)
+             DLTOVR     FILE(CONFIGS) LVL(*)
+
+             IF (&CANCEL = 'Y') THEN(DO)
+                 IF (&RMVLIB *EQ '1') THEN(RMVLIBLE LIB(&SRCLIB))
+                 RETURN
+             ENDDO
+
+  /* TEMPORARILY STICK LIBHTTP AT TOP OF LIBRARY LIST */
+
+             IF (&SRCLIB *NE '*LIBL') DO
+                 CHGVAR VAR(&RMVLIB) VALUE('1')
+                 ADDLIBLE   LIB(&SRCLIB) POSITION(*FIRST)
+                 MONMSG     MSGID(CPF2103) EXEC(DO)
+                     CHGVAR VAR(&RMVLIB) VALUE('0')
+                 ENDDO
+             ENDDO
+
+   /* IF EXPAT IS REQUIRED, AND WE'VE BEEN INSTRUCTED NOT TO BUILD +
+      IT, MAKE SURE IT'S ALREADY THERE. */
+
+             IF (&BLDEXPAT *EQ 'N' *AND &BLDXML *EQ 'Y') DO
+                  CHKOBJ OBJ(&INSTLIB/EXPAT) OBJTYPE(*SRVPGM)
+                  MONMSG MSGID(CPF9801) EXEC(DO)
+                      SNDPGMMSG  MSGID(CPF9801) MSGF(QCPFMSG) +
+                                 MSGDTA('EXPAT     '  +
+                                        *CAT &INSTLIB +
+                                        *CAT 'SRVPGM') +
+                                 TOPGMQ(*PRV) +
+                                 MSGTYPE(*ESCAPE)
+                  ENDDO
+             ENDDO
+
+
+   /* DELETE ANY OBSOLETE OBJECTS */
+
+             RMVLNK OBJLNK('/usr/bin/httpapi')
+             MONMSG CPFA0A9 EXEC(DO)
+                RCVMSG MSGTYPE(*LAST) RMV(*YES)
+             ENDDO
+
+             DLTPGM PGM(&INSTLIB/HTTPQSHR4)
+             MONMSG CPF2105 EXEC(DO)
+                RCVMSG MSGTYPE(*LAST) RMV(*YES)
+             ENDDO
+
+             DLTCMD     CMD(&INSTLIB/HTTPAPI)
+             MONMSG CPF2105 EXEC(DO)
+                RCVMSG MSGTYPE(*LAST) RMV(*YES)
+             ENDDO
+
+             DLTPNLGRP  PNLGRP(&INSTLIB/HTTPAPI)
+             MONMSG CPF2105 EXEC(DO)
+                RCVMSG MSGTYPE(*LAST) RMV(*YES)
+             ENDDO
+
+             DLTSRVPGM SRVPGM(&INSTLIB/HTTPAPIR4)
+             MONMSG CPF2105 EXEC(DO)
+                RCVMSG MSGTYPE(*LAST) RMV(*YES)
+             ENDDO
+
+             DLTPGM PGM(&INSTLIB/HTTPCMDR4)
+             MONMSG CPF2105 EXEC(DO)
+                RCVMSG MSGTYPE(*LAST) RMV(*YES)
+             ENDDO
+
+             IF (&BUILDSAMP = 'Y') THEN(DO)
+                 DLTPGM PGM(&INSTLIB/EXAMPLE1)
+                 MONMSG CPF2105 EXEC(DO)
+                    RCVMSG MSGTYPE(*LAST) RMV(*YES)
+                 ENDDO
+                 DLTPGM PGM(&INSTLIB/EXAMPLE2)
+                 MONMSG CPF2105 EXEC(DO)
+                    RCVMSG MSGTYPE(*LAST) RMV(*YES)
+                 ENDDO
+                 DLTPGM PGM(&INSTLIB/EXAMPLE3)
+                 MONMSG CPF2105 EXEC(DO)
+                    RCVMSG MSGTYPE(*LAST) RMV(*YES)
+                 ENDDO
+                 DLTPGM PGM(&INSTLIB/EXAMPLE4)
+                 MONMSG CPF2105 EXEC(DO)
+                    RCVMSG MSGTYPE(*LAST) RMV(*YES)
+                 ENDDO
+                 DLTPGM PGM(&INSTLIB/EXAMPLE5)
+                 MONMSG CPF2105 EXEC(DO)
+                    RCVMSG MSGTYPE(*LAST) RMV(*YES)
+                 ENDDO
+                 DLTPGM PGM(&INSTLIB/EXAMPLE6)
+                 MONMSG CPF2105 EXEC(DO)
+                    RCVMSG MSGTYPE(*LAST) RMV(*YES)
+                 ENDDO
+                 DLTPGM PGM(&INSTLIB/EXAMPLE7)
+                 MONMSG CPF2105 EXEC(DO)
+                    RCVMSG MSGTYPE(*LAST) RMV(*YES)
+                 ENDDO
+                 DLTPGM PGM(&INSTLIB/EXAMPLE8)
+                 MONMSG CPF2105 EXEC(DO)
+                    RCVMSG MSGTYPE(*LAST) RMV(*YES)
+                 ENDDO
+                 DLTPGM PGM(&INSTLIB/EXAMPLE9)
+                 MONMSG CPF2105 EXEC(DO)
+                    RCVMSG MSGTYPE(*LAST) RMV(*YES)
+                 ENDDO
+                 DLTPGM PGM(&INSTLIB/EXAMPLE10)
+                 MONMSG CPF2105 EXEC(DO)
+                    RCVMSG MSGTYPE(*LAST) RMV(*YES)
+                 ENDDO
+                 DLTPGM PGM(&INSTLIB/EXAMPLE11)
+                 MONMSG CPF2105 EXEC(DO)
+                    RCVMSG MSGTYPE(*LAST) RMV(*YES)
+                 ENDDO
+                 DLTPGM PGM(&INSTLIB/EXAMPLE12)
+                 MONMSG CPF2105 EXEC(DO)
+                    RCVMSG MSGTYPE(*LAST) RMV(*YES)
+                 ENDDO
+                 DLTPGM PGM(&INSTLIB/EXAMPLE13)
+                 MONMSG CPF2105 EXEC(DO)
+                    RCVMSG MSGTYPE(*LAST) RMV(*YES)
+                 ENDDO
+                 DLTPGM PGM(&INSTLIB/EXAMPLE14)
+                 MONMSG CPF2105 EXEC(DO)
+                    RCVMSG MSGTYPE(*LAST) RMV(*YES)
+                 ENDDO
+                 DLTPGM PGM(&INSTLIB/EXAMPLE15)
+                 MONMSG CPF2105 EXEC(DO)
+                    RCVMSG MSGTYPE(*LAST) RMV(*YES)
+                 ENDDO
+                 DLTF   FILE(&INSTLIB/EXAMPLE16S)
+                 MONMSG CPF2105 EXEC(DO)
+                    RCVMSG MSGTYPE(*LAST) RMV(*YES)
+                 ENDDO
+                 DLTF   FILE(&INSTLIB/EXAMPLE14S)
+                 MONMSG CPF2105 EXEC(DO)
+                    RCVMSG MSGTYPE(*LAST) RMV(*YES)
+                 ENDDO
+                 DLTPGM PGM(&INSTLIB/EXAMPLE16)
+                 MONMSG CPF2105 EXEC(DO)
+                    RCVMSG MSGTYPE(*LAST) RMV(*YES)
+                 ENDDO
+                 DLTPGM PGM(&INSTLIB/EXAMPLE17)
+                 MONMSG CPF2105 EXEC(DO)
+                    RCVMSG MSGTYPE(*LAST) RMV(*YES)
+                 ENDDO
+                 DLTPGM PGM(&INSTLIB/EXAMPLE18)
+                 MONMSG CPF2105 EXEC(DO)
+                    RCVMSG MSGTYPE(*LAST) RMV(*YES)
+                 ENDDO
+                 DLTPGM PGM(&INSTLIB/EXAMPLE19)
+                 MONMSG CPF2105 EXEC(DO)
+                    RCVMSG MSGTYPE(*LAST) RMV(*YES)
+                 ENDDO
+                 DLTPGM PGM(&INSTLIB/EXAMPLE20)
+                 MONMSG CPF2105 EXEC(DO)
+                    RCVMSG MSGTYPE(*LAST) RMV(*YES)
+                 ENDDO
+                 DLTPGM PGM(&INSTLIB/EXAMPLE21)
+                 MONMSG CPF2105 EXEC(DO)
+                    RCVMSG MSGTYPE(*LAST) RMV(*YES)
+                 ENDDO
+                 DLTPGM PGM(&INSTLIB/EXAMPLE22)
+                 MONMSG CPF2105 EXEC(DO)
+                    RCVMSG MSGTYPE(*LAST) RMV(*YES)
+                 ENDDO
+                 DLTPGM PGM(&INSTLIB/EXAMPLE23)
+                 MONMSG CPF2105 EXEC(DO)
+                    RCVMSG MSGTYPE(*LAST) RMV(*YES)
+                 ENDDO
+                 DLTPGM PGM(&INSTLIB/EXAMPLE24)
+                 MONMSG CPF2105 EXEC(DO)
+                    RCVMSG MSGTYPE(*LAST) RMV(*YES)
+                 ENDDO
+                 DLTPGM PGM(&INSTLIB/EXAMPLE40)
+                 MONMSG CPF2105 EXEC(DO)
+                    RCVMSG MSGTYPE(*LAST) RMV(*YES)
+                 ENDDO
+                 DLTPGM PGM(&INSTLIB/EXAMPLE41)
+                 MONMSG CPF2105 EXEC(DO)
+                    RCVMSG MSGTYPE(*LAST) RMV(*YES)
+                 ENDDO
+             ENDDO
+
+
+   /* CREATE A TEMP BINDING DIRECTORY USED FOR BUILDING HTTPAPIR4 */
+
+             DLTBNDDIR BNDDIR(QTEMP/HTTPAPIR4)
+             MONMSG CPF2105 EXEC(DO)
+                RCVMSG MSGTYPE(*LAST) RMV(*YES)
+             ENDDO
+
+             CRTBNDDIR BNDDIR(QTEMP/HTTPAPIR4)
+
+
+   /* BUILD EXPAT SERVICE PROGRAM */
+
+             IF (&BLDEXPAT *EQ 'Y') THEN(DO)
+                 CRTCLPGM PGM(&INSTLIB/MKEXPATCL) +
+                          SRCFILE(&SRCLIB/QCLSRC) +
+                          TGTRLS(&TGTRLS)
+                 CALL PGM(MKEXPATCL) PARM(&SRCLIB &INSTLIB &TGTRLS)
+             ENDDO
+             IF (&BLDXML *EQ 'Y') DO
+                 IF (&USELIBL *EQ 'Y') DO
+                      ADDBNDDIRE BNDDIR(QTEMP/HTTPAPIR4) +
+                                 OBJ((*LIBL/EXPAT *SRVPGM))
+                 ENDDO
+                 ELSE DO
+                      ADDBNDDIRE BNDDIR(QTEMP/HTTPAPIR4) +
+                                 OBJ((&INSTLIB/EXPAT *SRVPGM))
+                 ENDDO
+             ENDDO
+
+
+   /* BUILD MODULES REQUIRED BY HTTPAPI SERVICE PROGRAM */
+
+             CRTRPGMOD  MODULE(&INSTLIB/HTTPAPIR4) +
+                          SRCFILE(&SRCLIB/QRPGLESRC) DBGVIEW(*LIST) +
+                          TGTRLS(&TGTRLS)
+
+             CRTRPGMOD  MODULE(&INSTLIB/COMPATR4) +
+                          SRCFILE(&SRCLIB/QRPGLESRC) DBGVIEW(*LIST) +
+                          TGTRLS(&TGTRLS)
+             ADDBNDDIRE BNDDIR(QTEMP/HTTPAPIR4) +
+                          OBJ((&INSTLIB/COMPATR4 *MODULE))
+
+             CRTRPGMOD  MODULE(&INSTLIB/COMMTCPR4) +
+                          SRCFILE(&SRCLIB/QRPGLESRC) DBGVIEW(*LIST) +
+                          TGTRLS(&TGTRLS)
+             ADDBNDDIRE BNDDIR(QTEMP/HTTPAPIR4) +
+                          OBJ((&INSTLIB/COMMTCPR4 *MODULE))
+
+             CRTRPGMOD  MODULE(&INSTLIB/HTTPUTILR4) +
+                          SRCFILE(&SRCLIB/QRPGLESRC) DBGVIEW(*LIST) +
+                          TGTRLS(&TGTRLS)
+             ADDBNDDIRE BNDDIR(QTEMP/HTTPAPIR4) +
+                          OBJ((&INSTLIB/HTTPUTILR4 *MODULE))
+
+             CRTRPGMOD  MODULE(&INSTLIB/ENCODERR4) +
+                          SRCFILE(&SRCLIB/QRPGLESRC) DBGVIEW(*LIST) +
+                          TGTRLS(&TGTRLS)
+             ADDBNDDIRE BNDDIR(QTEMP/HTTPAPIR4) +
+                          OBJ((&INSTLIB/ENCODERR4 *MODULE))
+
+             CRTRPGMOD  MODULE(&INSTLIB/DECODERR4) +
+                          SRCFILE(&SRCLIB/QRPGLESRC) DBGVIEW(*LIST) +
+                          TGTRLS(&TGTRLS)
+             ADDBNDDIRE BNDDIR(QTEMP/HTTPAPIR4) +
+                          OBJ((&INSTLIB/DECODERR4 *MODULE))
+
+             CRTRPGMOD  MODULE(&INSTLIB/CCSIDR4) +
+                          SRCFILE(&SRCLIB/QRPGLESRC) DBGVIEW(*LIST) +
+                          TGTRLS(&TGTRLS)
+             ADDBNDDIRE BNDDIR(QTEMP/HTTPAPIR4) +
+                          OBJ((&INSTLIB/CCSIDR4 *MODULE))
+
+             CRTRPGMOD  MODULE(&INSTLIB/HEADERR4) +
+                          SRCFILE(&SRCLIB/QRPGLESRC) DBGVIEW(*LIST) +
+                          TGTRLS(&TGTRLS)
+             ADDBNDDIRE BNDDIR(QTEMP/HTTPAPIR4) +
+                          OBJ((&INSTLIB/HEADERR4 *MODULE))
+
+
+   /* BUILD NTLM AUTH PLUGIN */
+
+
+             IF (&BLDNTLM *EQ 'Y') DO
+                CRTRPGMOD  MODULE(&INSTLIB/MD4R4) +
+                          SRCFILE(&SRCLIB/QRPGLESRC) DBGVIEW(*LIST) +
+                          TGTRLS(&TGTRLS)
+                ADDBNDDIRE BNDDIR(QTEMP/HTTPAPIR4) +
+                          OBJ((&INSTLIB/MD4R4 *MODULE))
+                CRTRPGMOD  MODULE(&INSTLIB/ENCRYPTR4) +
+                          SRCFILE(&SRCLIB/QRPGLESRC) DBGVIEW(*LIST) +
+                          TGTRLS(&TGTRLS)
+                ADDBNDDIRE BNDDIR(QTEMP/HTTPAPIR4) +
+                          OBJ((&INSTLIB/ENCRYPTR4 *MODULE))
+                CRTRPGMOD  MODULE(&INSTLIB/NTLMR4) +
+                          SRCFILE(&SRCLIB/QRPGLESRC) DBGVIEW(*LIST) +
+                          TGTRLS(&TGTRLS)
+                ADDBNDDIRE BNDDIR(QTEMP/HTTPAPIR4) +
+                          OBJ((&INSTLIB/NTLMR4 *MODULE))
+             ENDDO
+
+
+   /* BUILD ANY OPTIONAL MODULES */
+
+             IF (&BLDXML *EQ 'Y') DO
+                  CRTRPGMOD  MODULE(&INSTLIB/HTTPXMLR4) +
+                             SRCFILE(&SRCLIB/QRPGLESRC) +
+                             DBGVIEW(*LIST) +
+                             TGTRLS(&TGTRLS)
+                  ADDBNDDIRE BNDDIR(QTEMP/HTTPAPIR4) +
+                             OBJ((&INSTLIB/HTTPXMLR4 *MODULE))
+             ENDDO
+             ELSE DO
+                  CRTRPGMOD  MODULE(&INSTLIB/XMLSTUBR4) +
+                             SRCFILE(&SRCLIB/QRPGLESRC) +
+                             DBGVIEW(*LIST) +
+                             TGTRLS(&TGTRLS)
+                  ADDBNDDIRE BNDDIR(QTEMP/HTTPAPIR4) +
+                             OBJ((&INSTLIB/XMLSTUBR4 *MODULE))
+             ENDDO
+
+             IF (&HAVESSLAPI *EQ 'Y') DO
+                  CRTRPGMOD  MODULE(&INSTLIB/COMMSSLR4) +
+                             SRCFILE(&SRCLIB/QRPGLESRC) +
+                             DBGVIEW(*LIST) +
+                             TGTRLS(&TGTRLS)
+                  ADDBNDDIRE BNDDIR(QTEMP/HTTPAPIR4) +
+                             OBJ((&INSTLIB/COMMSSLR4 *MODULE))
+             ENDDO
+
+
+   /* BUILD THE SERVICE PROGRAM ITSELF */
+
+             IF (&HAVESSLAPI *EQ 'Y') DO
+                  CHGVAR &BNDSRC VALUE('HTTPAPI2')
+             ENDDO
+             ELSE DO
+                  CHGVAR &BNDSRC VALUE('HTTPAPI1')
+             ENDDO
+
+             CRTSRVPGM SRVPGM(&INSTLIB/HTTPAPIR4) +
+                       MODULE(&INSTLIB/HTTPAPIR4) +
+                       EXPORT(*SRCFILE) +
+                       SRCFILE(&SRCLIB/QSRVSRC) +
+                       SRCMBR(&BNDSRC) +
+                       TEXT('HTTP-API Service Program') +
+                       BNDDIR(QTEMP/HTTPAPIR4 QC2LE) +
+                       ACTGRP(*CALLER) +
+                       TGTRLS(&TGTRLS)
+
+
+   /* DELETE MODULE OBJECTS, SRVPGM SHOULD NOW BE DONE */
+
+             DLTMOD     MODULE(&INSTLIB/HTTPAPIR4)
+             DLTMOD     MODULE(&INSTLIB/HTTPUTILR4)
+             DLTMOD     MODULE(&INSTLIB/ENCODERR4)
+             DLTMOD     MODULE(&INSTLIB/DECODERR4)
+             DLTMOD     MODULE(&INSTLIB/COMPATR4)
+             DLTMOD     MODULE(&INSTLIB/COMMTCPR4)
+             DLTMOD     MODULE(&INSTLIB/CCSIDR4)
+             DLTMOD     MODULE(&INSTLIB/HEADERR4)
+
+             DLTMOD     MODULE(&INSTLIB/COMMSSLR4)
+             MONMSG     MSGID(CPF2105) EXEC(DO)
+               RCVMSG MSGTYPE(*LAST) RMV(*YES)
+             ENDDO
+
+             DLTMOD     MODULE(&INSTLIB/HTTPXMLR4)
+             MONMSG     MSGID(CPF2105) EXEC(DO)
+               RCVMSG MSGTYPE(*LAST) RMV(*YES)
+             ENDDO
+
+             DLTMOD     MODULE(&INSTLIB/XMLSTUBR4)
+             MONMSG     MSGID(CPF2105) EXEC(DO)
+               RCVMSG MSGTYPE(*LAST) RMV(*YES)
+             ENDDO
+
+             DLTMOD     MODULE(&INSTLIB/ENCRYPTR4)
+             MONMSG     MSGID(CPF2105) EXEC(DO)
+               RCVMSG MSGTYPE(*LAST) RMV(*YES)
+             ENDDO
+
+             DLTMOD     MODULE(&INSTLIB/MD4R4)
+             MONMSG     MSGID(CPF2105) EXEC(DO)
+               RCVMSG MSGTYPE(*LAST) RMV(*YES)
+             ENDDO
+
+             DLTMOD     MODULE(&INSTLIB/NTLMR4)
+             MONMSG     MSGID(CPF2105) EXEC(DO)
+               RCVMSG MSGTYPE(*LAST) RMV(*YES)
+             ENDDO
+
+             DLTBNDDIR  BNDDIR(QTEMP/HTTPAPIR4)
+
+
+   /* BUILD HTTPAPI BINDING DIRECTORY */
+
+
+             DLTBNDDIR BNDDIR(&INSTLIB/HTTPAPI)
+             MONMSG MSGID(CPF2105) EXEC(DO)
+               RCVMSG MSGTYPE(*LAST) RMV(*YES)
+             ENDDO
+
+             CHGVAR VAR(&BINDLIB) VALUE(&INSTLIB)
+             IF (&USELIBL *EQ 'Y') DO
+                CHGVAR VAR(&BINDLIB) VALUE('*LIBL')
+             ENDDO
+
+             CRTBNDDIR  BNDDIR(&INSTLIB/HTTPAPI) TEXT('HTTPAPI +
+                               binding directory')
+             ADDBNDDIRE BNDDIR(&INSTLIB/HTTPAPI) +
+                              OBJ((&BINDLIB/HTTPAPIR4 *SRVPGM)) +
+                              POSITION(*FIRST)
+
+             IF (&BLDXML *EQ 'Y') DO
+                  ADDBNDDIRE BNDDIR(&INSTLIB/HTTPAPI) +
+                              OBJ((&BINDLIB/EXPAT *SRVPGM)) +
+                              POSITION(*FIRST)
+             ENDDO
+
+
+   /* BUILD COMMAND-LINE AND QSHELL INTERFACES */
+
+             IF (&VERSION *GE 'V5R1M0') DO
+
+                CRTRPGMOD MODULE(&INSTLIB/HTTPCMDR4) +
+                             SRCFILE(&SRCLIB/QRPGLESRC) +
+                             TGTRLS(&TGTRLS) DBGVIEW(*LIST)
+                DLTSPLF    FILE(HTTPCMDR4) JOB(*) SPLNBR(*LAST)
+                MONMSG     MSGID(CPF3303 CPF3309) EXEC(DO)
+                   RCVMSG MSGTYPE(*LAST) RMV(*YES)
+                ENDDO
+
+                CRTRPGMOD MODULE(&INSTLIB/HTTPQSHR4) +
+                             SRCFILE(&SRCLIB/QRPGLESRC) +
+                             TGTRLS(&TGTRLS) DBGVIEW(*LIST)
+                DLTSPLF    FILE(HTTPQSHR4) JOB(*) SPLNBR(*LAST)
+                MONMSG     MSGID(CPF3303 CPF3309) EXEC(DO)
+                   RCVMSG MSGTYPE(*LAST) RMV(*YES)
+                ENDDO
+
+                CRTPGM PGM(&INSTLIB/HTTPCMDR4) +
+                            MODULE(&INSTLIB/HTTPCMDR4) +
+                            ACTGRP(HTTPAPI) +
+                            BNDDIR(&INSTLIB/HTTPAPI QC2LE) +
+                            TGTRLS(&TGTRLS)
+
+                CRTPGM PGM(&INSTLIB/HTTPQSHR4) +
+                            MODULE(&INSTLIB/HTTPQSHR4 +
+                                   &INSTLIB/HTTPCMDR4) +
+                            ACTGRP(HTTPAPI) +
+                            BNDDIR(&INSTLIB/HTTPAPI QC2LE) +
+                            TGTRLS(&TGTRLS)
+
+                DLTMOD     MODULE(&INSTLIB/HTTPCMDR4)
+                DLTMOD     MODULE(&INSTLIB/HTTPQSHR4)
+
+                CHGVAR VAR(&INSCMDZ) VALUE('INSTALL' *CAT &NULL)
+                CHGVAR VAR(&INSLIBZ) VALUE(&INSTLIB *TCAT &NULL)
+                CALL   PGM(HTTPQSHR4) PARM(&INSCMDZ &INSLIBZ)
+
+                CRTPNLGRP  PNLGRP(&INSTLIB/HTTPAPI) +
+                             SRCFILE(&SRCLIB/QCMDSRC) +
+                             SRCMBR(HTTPAPIPNL)
+                DLTSPLF    FILE(HTTPAPI) JOB(*) SPLNBR(*LAST)
+                MONMSG     MSGID(CPF3303 CPF3309) EXEC(DO)
+                   RCVMSG MSGTYPE(*LAST) RMV(*YES)
+                ENDDO
+
+                CRTCMD     CMD(&INSTLIB/HTTPAPI) +
+                             PGM(&BINDLIB/HTTPCMDR4) +
+                             SRCFILE(&SRCLIB/QCMDSRC) +
+                             PRDLIB(&INSTLIB) +
+                             HLPPNLGRP(&BINDLIB/HTTPAPI) +
+                             HLPID(*CMD)
+                DLTSPLF    FILE(HTTPAPI) JOB(*) SPLNBR(*LAST)
+                MONMSG     MSGID(CPF3303 CPF3309) EXEC(DO)
+                   RCVMSG MSGTYPE(*LAST) RMV(*YES)
+                ENDDO
+
+             ENDDO
+
+
+   /* BUILD SAMPLE PROGRAMS */
+
+             IF (&BUILDSAMP *EQ 'N') THEN(DO)
+                 IF (&RMVLIB *EQ '1') THEN(RMVLIBLE LIB(&SRCLIB))
+                 RETURN
+             ENDDO
+
+             CRTBNDRPG  PGM(&INSTLIB/EXAMPLE1) +
+                          SRCFILE(&SRCLIB/QRPGLESRC) DBGVIEW(*LIST) +
+                          TGTRLS(&TGTRLS)
+             CRTBNDRPG  PGM(&INSTLIB/EXAMPLE2) +
+                          SRCFILE(&SRCLIB/QRPGLESRC) DBGVIEW(*LIST) +
+                          TGTRLS(&TGTRLS)
+
+             IF (&HAVESSLAPI *EQ 'Y') THEN(DO)
+                  CRTBNDRPG PGM(&INSTLIB/EXAMPLE3) +
+                              SRCFILE(&SRCLIB/QRPGLESRC) +
+                              DBGVIEW(*LIST) +
+                              TGTRLS(&TGTRLS)
+             ENDDO
+
+             CRTBNDRPG PGM(&INSTLIB/EXAMPLE4) +
+                         SRCFILE(&SRCLIB/QRPGLESRC) +
+                         DBGVIEW(*LIST) +
+                         TGTRLS(&TGTRLS)
+             CRTBNDRPG PGM(&INSTLIB/EXAMPLE5) +
+                         SRCFILE(&SRCLIB/QRPGLESRC) +
+                         DBGVIEW(*LIST) +
+                         TGTRLS(&TGTRLS)
+
+             IF (&VERSION *GE 'V5R1M0') DO
+                  CRTBNDRPG  PGM(&INSTLIB/EXAMPLE6) +
+                               SRCFILE(&SRCLIB/QRPGLESRC) +
+                               DBGVIEW(*LIST) +
+                               TGTRLS(&TGTRLS)
+                  CRTBNDRPG  PGM(&INSTLIB/EXAMPLE7) +
+                               SRCFILE(&SRCLIB/QRPGLESRC) +
+                               DBGVIEW(*LIST) +
+                               TGTRLS(&TGTRLS)
+             ENDDO
+
+             CRTBNDRPG  PGM(&INSTLIB/EXAMPLE8) +
+                          SRCFILE(&SRCLIB/QRPGLESRC) +
+                          DBGVIEW(*LIST) +
+                          TGTRLS(&TGTRLS)
+
+             IF (&VERSION *GE 'V5R1M0') DO
+                  CRTBNDRPG  PGM(&INSTLIB/EXAMPLE9) +
+                               SRCFILE(&SRCLIB/QRPGLESRC) +
+                               DBGVIEW(*LIST) +
+                               TGTRLS(&TGTRLS)
+                  CRTCMD     CMD(&INSTLIB/EXAMPLE9) +
+                               PGM(&INSTLIB/EXAMPLE9) +
+                               SRCFILE(&SRCLIB/QCMDSRC) +
+                               PRDLIB(&INSTLIB)
+             ENDDO
+
+             IF (&BLDXML *EQ 'Y') DO
+                  CRTBNDRPG  PGM(&INSTLIB/EXAMPLE10) +
+                               SRCFILE(&SRCLIB/QRPGLESRC) +
+                               DBGVIEW(*LIST) +
+                               TGTRLS(&TGTRLS)
+                  CRTBNDRPG  PGM(&INSTLIB/EXAMPLE11) +
+                               SRCFILE(&SRCLIB/QRPGLESRC) +
+                               DBGVIEW(*LIST) +
+                               TGTRLS(&TGTRLS)
+                  CRTBNDRPG  PGM(&INSTLIB/EXAMPLE12) +
+                               SRCFILE(&SRCLIB/QRPGLESRC) +
+                               DBGVIEW(*LIST) +
+                               TGTRLS(&TGTRLS)
+                  IF (&HAVEST1 *EQ 'Y') DO
+                       CRTSQLRPGI OBJ(&INSTLIB/EXAMPLE13) +
+                               SRCFILE(&SRCLIB/QRPGLESRC) +
+                               OBJTYPE(*PGM) +
+                               DBGVIEW(*SOURCE) +
+                               TGTRLS(&TGTRLS)
+                  ENDDO
+                  IF (&HAVESSLAPI *EQ 'Y') THEN(DO)
+                       CRTDSPF FILE(&INSTLIB/EXAMPLE14S) +
+                                    SRCFILE(&SRCLIB/QDDSSRC)
+                       CRTBNDRPG PGM(&INSTLIB/EXAMPLE14) +
+                                   SRCFILE(&SRCLIB/QRPGLESRC) +
+                                   DBGVIEW(*LIST) +
+                                   TGTRLS(&TGTRLS)
+                  ENDDO
+                  CRTBNDRPG PGM(&INSTLIB/EXAMPLE15) +
+                              SRCFILE(&SRCLIB/QRPGLESRC) +
+                              DBGVIEW(*LIST) +
+                              TGTRLS(&TGTRLS)
+                  CRTBNDRPG PGM(&INSTLIB/EXAMPLE16) +
+                            SRCFILE(&SRCLIB/QRPGLESRC) +
+                            DBGVIEW(*LIST) +
+                            TGTRLS(&TGTRLS)
+                  CRTBNDRPG PGM(&INSTLIB/EXAMPLE17) +
+                            SRCFILE(&SRCLIB/QRPGLESRC) +
+                            DBGVIEW(*LIST) +
+                            TGTRLS(&TGTRLS)
+                  CRTBNDRPG PGM(&INSTLIB/EXAMPLE18) +
+                            SRCFILE(&SRCLIB/QRPGLESRC) +
+                            DBGVIEW(*LIST) +
+                            TGTRLS(&TGTRLS)
+                  CRTBNDRPG PGM(&INSTLIB/EXAMPLE19) +
+                            SRCFILE(&SRCLIB/QRPGLESRC) +
+                            DBGVIEW(*LIST) +
+                            TGTRLS(&TGTRLS)
+                  CRTBNDRPG PGM(&INSTLIB/EXAMPLE20) +
+                            SRCFILE(&SRCLIB/QRPGLESRC) +
+                            DBGVIEW(*LIST) +
+                            TGTRLS(&TGTRLS)
+             ENDDO
+
+             CRTBNDRPG PGM(&INSTLIB/EXAMPLE21) +
+                       SRCFILE(&SRCLIB/QRPGLESRC) +
+                       DBGVIEW(*LIST) +
+                       TGTRLS(&TGTRLS)
+
+             CRTBNDRPG PGM(&INSTLIB/EXAMPLE22) +
+                       SRCFILE(&SRCLIB/QRPGLESRC) +
+                       DBGVIEW(*LIST) +
+                       TGTRLS(&TGTRLS)
+
+             IF (&HAVESSLAPI *EQ 'Y') THEN(DO)
+                   CRTBNDRPG PGM(&INSTLIB/EXAMPLE23) +
+                             SRCFILE(&SRCLIB/QRPGLESRC) +
+                             DBGVIEW(*LIST) +
+                             TGTRLS(&TGTRLS)
+             ENDDO
+             IF (&HAVESSLAPI *EQ 'Y' *AND &VERSION *GE 'V5R3MO') DO
+                   CRTBNDRPG PGM(&INSTLIB/EXAMPLE24) +
+                             SRCFILE(&SRCLIB/QRPGLESRC) +
+                             DBGVIEW(*LIST) +
+                             TGTRLS(&TGTRLS)
+             ENDDO
+             IF (&HAVESSLAPI *EQ 'Y') THEN(DO)
+                   CRTBNDRPG PGM(&INSTLIB/EXAMPLE40) +
+                             SRCFILE(&SRCLIB/QRPGLESRC) +
+                             DBGVIEW(*LIST) +
+                             TGTRLS(&TGTRLS)
+             ENDDO
+             IF (&HAVESSLAPI *EQ 'Y') THEN(DO)
+                   CRTBNDRPG PGM(&INSTLIB/EXAMPLE41) +
+                             SRCFILE(&SRCLIB/QRPGLESRC) +
+                             DBGVIEW(*LIST) +
+                             TGTRLS(&TGTRLS)
+             ENDDO
+
+
+   /* DELETE COMPILER LISTINGS */
+
+             DLTSPLF    FILE(HTTPAPIR4) JOB(*) SPLNBR(*LAST)
+             MONMSG     MSGID(CPF3303 CPF3309) EXEC(DO)
+                RCVMSG MSGTYPE(*LAST) RMV(*YES)
+             ENDDO
+             DLTSPLF    FILE(COMPATR4) JOB(*) SPLNBR(*LAST)
+             MONMSG     MSGID(CPF3303 CPF3309) EXEC(DO)
+                RCVMSG MSGTYPE(*LAST) RMV(*YES)
+             ENDDO
+             DLTSPLF    FILE(HTTPUTILR4) JOB(*) SPLNBR(*LAST)
+             MONMSG     MSGID(CPF3303 CPF3309) EXEC(DO)
+                RCVMSG MSGTYPE(*LAST) RMV(*YES)
+             ENDDO
+             DLTSPLF    FILE(COMMTCPR4) JOB(*) SPLNBR(*LAST)
+             MONMSG     MSGID(CPF3303 CPF3309) EXEC(DO)
+                RCVMSG MSGTYPE(*LAST) RMV(*YES)
+             ENDDO
+             DLTSPLF    FILE(COMMSSLR4) JOB(*) SPLNBR(*LAST)
+             MONMSG     MSGID(CPF3303 CPF3309) EXEC(DO)
+                RCVMSG MSGTYPE(*LAST) RMV(*YES)
+             ENDDO
+             DLTSPLF    FILE(ENCODERR4) JOB(*) SPLNBR(*LAST)
+             MONMSG     MSGID(CPF3303 CPF3309) EXEC(DO)
+                RCVMSG MSGTYPE(*LAST) RMV(*YES)
+             ENDDO
+             DLTSPLF    FILE(DECODERR4) JOB(*) SPLNBR(*LAST)
+             MONMSG     MSGID(CPF3303 CPF3309) EXEC(DO)
+                RCVMSG MSGTYPE(*LAST) RMV(*YES)
+             ENDDO
+             DLTSPLF    FILE(EXAMPLE1) JOB(*) SPLNBR(*LAST)
+             MONMSG     MSGID(CPF3303 CPF3309) EXEC(DO)
+                RCVMSG MSGTYPE(*LAST) RMV(*YES)
+             ENDDO
+             DLTSPLF    FILE(EXAMPLE2) JOB(*) SPLNBR(*LAST)
+             MONMSG     MSGID(CPF3303 CPF3309) EXEC(DO)
+                RCVMSG MSGTYPE(*LAST) RMV(*YES)
+             ENDDO
+             DLTSPLF    FILE(EXAMPLE3) JOB(*) SPLNBR(*LAST)
+             MONMSG     MSGID(CPF3303 CPF3309) EXEC(DO)
+                RCVMSG MSGTYPE(*LAST) RMV(*YES)
+             ENDDO
+             DLTSPLF    FILE(EXAMPLE4) JOB(*) SPLNBR(*LAST)
+             MONMSG     MSGID(CPF3303 CPF3309) EXEC(DO)
+                RCVMSG MSGTYPE(*LAST) RMV(*YES)
+             ENDDO
+             DLTSPLF    FILE(EXAMPLE5) JOB(*) SPLNBR(*LAST)
+             MONMSG     MSGID(CPF3303 CPF3309) EXEC(DO)
+                RCVMSG MSGTYPE(*LAST) RMV(*YES)
+             ENDDO
+             DLTSPLF    FILE(EXAMPLE6) JOB(*) SPLNBR(*LAST)
+             MONMSG     MSGID(CPF3303 CPF3309) EXEC(DO)
+                RCVMSG MSGTYPE(*LAST) RMV(*YES)
+             ENDDO
+             DLTSPLF    FILE(EXAMPLE7) JOB(*) SPLNBR(*LAST)
+             MONMSG     MSGID(CPF3303 CPF3309) EXEC(DO)
+                RCVMSG MSGTYPE(*LAST) RMV(*YES)
+             ENDDO
+             DLTSPLF    FILE(EXAMPLE8) JOB(*) SPLNBR(*LAST)
+             MONMSG     MSGID(CPF3303 CPF3309) EXEC(DO)
+                RCVMSG MSGTYPE(*LAST) RMV(*YES)
+             ENDDO
+             DLTSPLF    FILE(EXAMPLE9) JOB(*) SPLNBR(*LAST)
+             MONMSG     MSGID(CPF3303 CPF3309) EXEC(DO)
+                RCVMSG MSGTYPE(*LAST) RMV(*YES)
+             ENDDO
+             DLTSPLF    FILE(EXAMPLE9) JOB(*) SPLNBR(*LAST)
+             MONMSG     MSGID(CPF3303 CPF3309) EXEC(DO)
+                RCVMSG MSGTYPE(*LAST) RMV(*YES)
+             ENDDO
+             DLTSPLF    FILE(EXAMPLE10) JOB(*) SPLNBR(*LAST)
+             MONMSG     MSGID(CPF3303 CPF3309) EXEC(DO)
+                RCVMSG MSGTYPE(*LAST) RMV(*YES)
+             ENDDO
+             DLTSPLF    FILE(EXAMPLE11) JOB(*) SPLNBR(*LAST)
+             MONMSG     MSGID(CPF3303 CPF3309) EXEC(DO)
+                RCVMSG MSGTYPE(*LAST) RMV(*YES)
+             ENDDO
+             DLTSPLF    FILE(EXAMPLE12) JOB(*) SPLNBR(*LAST)
+             MONMSG     MSGID(CPF3303 CPF3309) EXEC(DO)
+                RCVMSG MSGTYPE(*LAST) RMV(*YES)
+             ENDDO
+             DLTSPLF    FILE(EXAMPLE13) JOB(*) SPLNBR(*LAST)
+             MONMSG     MSGID(CPF3303 CPF3309) EXEC(DO)
+                RCVMSG MSGTYPE(*LAST) RMV(*YES)
+             ENDDO
+             DLTSPLF    FILE(EXAMPLE13) JOB(*) SPLNBR(*LAST)
+             MONMSG     MSGID(CPF3303 CPF3309) EXEC(DO)
+                RCVMSG MSGTYPE(*LAST) RMV(*YES)
+             ENDDO
+             DLTSPLF    FILE(EXAMPLE14) JOB(*) SPLNBR(*LAST)
+             MONMSG     MSGID(CPF3303 CPF3309) EXEC(DO)
+                RCVMSG MSGTYPE(*LAST) RMV(*YES)
+             ENDDO
+             DLTSPLF    FILE(EXAMPLE15) JOB(*) SPLNBR(*LAST)
+             MONMSG     MSGID(CPF3303 CPF3309) EXEC(DO)
+                RCVMSG MSGTYPE(*LAST) RMV(*YES)
+             ENDDO
+             DLTSPLF    FILE(EXAMPLE14S) JOB(*) SPLNBR(*LAST)
+             MONMSG     MSGID(CPF3303 CPF3309) EXEC(DO)
+                RCVMSG MSGTYPE(*LAST) RMV(*YES)
+             ENDDO
+             DLTSPLF    FILE(EXAMPLE16) JOB(*) SPLNBR(*LAST)
+             MONMSG     MSGID(CPF3303 CPF3309) EXEC(DO)
+                RCVMSG MSGTYPE(*LAST) RMV(*YES)
+             ENDDO
+             DLTSPLF    FILE(EXAMPLE17) JOB(*) SPLNBR(*LAST)
+             MONMSG     MSGID(CPF3303 CPF3309) EXEC(DO)
+                RCVMSG MSGTYPE(*LAST) RMV(*YES)
+             ENDDO
+             DLTSPLF    FILE(EXAMPLE18) JOB(*) SPLNBR(*LAST)
+             MONMSG     MSGID(CPF3303 CPF3309) EXEC(DO)
+                RCVMSG MSGTYPE(*LAST) RMV(*YES)
+             ENDDO
+             DLTSPLF    FILE(EXAMPLE19) JOB(*) SPLNBR(*LAST)
+             MONMSG     MSGID(CPF3303 CPF3309) EXEC(DO)
+                RCVMSG MSGTYPE(*LAST) RMV(*YES)
+             ENDDO
+             DLTSPLF    FILE(EXAMPLE20) JOB(*) SPLNBR(*LAST)
+             MONMSG     MSGID(CPF3303 CPF3309) EXEC(DO)
+                RCVMSG MSGTYPE(*LAST) RMV(*YES)
+             ENDDO
+             DLTSPLF    FILE(EXAMPLE21) JOB(*) SPLNBR(*LAST)
+             MONMSG     MSGID(CPF3303 CPF3309) EXEC(DO)
+                RCVMSG MSGTYPE(*LAST) RMV(*YES)
+             ENDDO
+             DLTSPLF    FILE(EXAMPLE22) JOB(*) SPLNBR(*LAST)
+             MONMSG     MSGID(CPF3303 CPF3309) EXEC(DO)
+                RCVMSG MSGTYPE(*LAST) RMV(*YES)
+             ENDDO
+             DLTSPLF    FILE(EXAMPLE23) JOB(*) SPLNBR(*LAST)
+             MONMSG     MSGID(CPF3303 CPF3309) EXEC(DO)
+                RCVMSG MSGTYPE(*LAST) RMV(*YES)
+             ENDDO
+             DLTSPLF    FILE(EXAMPLE24) JOB(*) SPLNBR(*LAST)
+             MONMSG     MSGID(CPF3303 CPF3309) EXEC(DO)
+                RCVMSG MSGTYPE(*LAST) RMV(*YES)
+             ENDDO
+             DLTSPLF    FILE(EXAMPLE40) JOB(*) SPLNBR(*LAST)
+             MONMSG     MSGID(CPF3303 CPF3309) EXEC(DO)
+                RCVMSG MSGTYPE(*LAST) RMV(*YES)
+             ENDDO
+             DLTSPLF    FILE(EXAMPLE41) JOB(*) SPLNBR(*LAST)
+             MONMSG     MSGID(CPF3303 CPF3309) EXEC(DO)
+                RCVMSG MSGTYPE(*LAST) RMV(*YES)
+             ENDDO
+             DLTSPLF    FILE(MKEXPATCL) JOB(*) SPLNBR(*LAST)
+             MONMSG     MSGID(CPF3303 CPF3309) EXEC(DO)
+                RCVMSG MSGTYPE(*LAST) RMV(*YES)
+             ENDDO
+             DLTSPLF    FILE(HTTPXMLR4) JOB(*) SPLNBR(*LAST)
+             MONMSG     MSGID(CPF3303 CPF3309) EXEC(DO)
+                RCVMSG MSGTYPE(*LAST) RMV(*YES)
+             ENDDO
+             DLTSPLF    FILE(XMLSTUBR4) JOB(*) SPLNBR(*LAST)
+             MONMSG     MSGID(CPF3303 CPF3309) EXEC(DO)
+                RCVMSG MSGTYPE(*LAST) RMV(*YES)
+             ENDDO
+             DLTSPLF    FILE(CCSIDR4) JOB(*) SPLNBR(*LAST)
+             MONMSG     MSGID(CPF3303 CPF3309) EXEC(DO)
+                RCVMSG MSGTYPE(*LAST) RMV(*YES)
+             ENDDO
+             DLTSPLF    FILE(HEADERR4) JOB(*) SPLNBR(*LAST)
+             MONMSG     MSGID(CPF3303 CPF3309) EXEC(DO)
+                RCVMSG MSGTYPE(*LAST) RMV(*YES)
+             ENDDO
+             DLTSPLF    FILE(ENCRYPTR4) JOB(*) SPLNBR(*LAST)
+             MONMSG     MSGID(CPF3303 CPF3309) EXEC(DO)
+                RCVMSG MSGTYPE(*LAST) RMV(*YES)
+             ENDDO
+             DLTSPLF    FILE(MD4R4) JOB(*) SPLNBR(*LAST)
+             MONMSG     MSGID(CPF3303 CPF3309) EXEC(DO)
+                RCVMSG MSGTYPE(*LAST) RMV(*YES)
+             ENDDO
+             DLTSPLF    FILE(NTLMR4) JOB(*) SPLNBR(*LAST)
+             MONMSG     MSGID(CPF3303 CPF3309) EXEC(DO)
+                RCVMSG MSGTYPE(*LAST) RMV(*YES)
+             ENDDO
+
+             IF (&RMVLIB *EQ '1') THEN(RMVLIBLE LIB(&SRCLIB))
+ENDPGM
+

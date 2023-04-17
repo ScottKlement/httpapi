@@ -1,0 +1,56 @@
+@echo off
+rem **************************************************************
+rem *  This is an MS-DOS BATCH file for uploading all of the     *
+rem *  HTTPAPI members to the iSeries.  It's intended to make    *
+rem *  the process of uploading this data less arduous.          *
+rem **************************************************************
+rem Copyright (c) 2001-2023 Scott C. Klement
+rem All rights reserved.
+rem
+rem Redistribution and use in source and binary forms, with or without
+rem modification, are permitted provided that the following conditions
+rem are met:
+rem 1. Redistributions of source code must retain the above copyright
+rem    notice, this list of conditions and the following disclaimer.
+rem 2. Redistributions in binary form must reproduce the above copyright
+rem    notice, this list of conditions and the following disclaimer in the
+rem    documentation and/or other materials provided with the distribution.
+rem
+rem    THIS SOFTWARE IS PROVIDED BY THE AUTHOR AND CONTRIBUTORS ''AS IS'' AND
+rem    ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+rem    IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+rem    ARE DISCLAIMED.  IN NO EVENT SHALL THE AUTHOR OR CONTRIBUTORS BE LIABLE
+rem    FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+rem    DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS
+rem    OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+rem    HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+rem    LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
+rem    OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
+rem    SUCH DAMAGE.
+
+rem
+rem **************************************************************
+set TEMPFILE=httpapi.fts
+set HOST=%1
+set USER=%2
+set PASS=%3
+set LIB=LIBHTTP
+if "%HOST%"=="" goto usage
+if "%USER%"=="" goto usage
+if "%PASS%"=="" goto usage
+echo %USER%> %TEMPFILE%
+echo %PASS%>> %TEMPFILE%
+echo quote site namefmt 1 >> %TEMPFILE%
+echo cd /QSYS.LIB/QGPL.LIB >> %TEMPFILE%
+echo quote site namefmt 0 >> %TEMPFILE%
+echo quote crtl %LIB%>> %TEMPFILE%
+echo quote crts file(%LIB%/qclsrc) rcdlen(92)>> %TEMPFILE%
+echo quote crts file(%LIB%/qddssrc) rcdlen(92)>> %TEMPFILE%
+echo quote crts file(%LIB%/qsrvsrc) rcdlen(92)>> %TEMPFILE%
+echo quote crts file(%LIB%/qrpglesrc) rcdlen(112)>> %TEMPFILE%
+echo quote crts file(%LIB%/qsh) rcdlen(124)>> %TEMPFILE%
+echo quote crts file(%LIB%/qxmlgens) rcdlen(112)>> %TEMPFILE%
+echo quote crts file(%LIB%/expat) rcdlen(112)>> %TEMPFILE%
+echo quote crts file(%LIB%/qcmdsrc) rcdlen(92)>> %TEMPFILE%
+echo cd %LIB%>> %TEMPFILE%
+echo ascii>> %TEMPFILE%

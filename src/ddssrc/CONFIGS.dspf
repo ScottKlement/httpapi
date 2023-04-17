@@ -1,0 +1,397 @@
+     A                                      DSPSIZ(24 80 *DS3)
+     A                                      PRINT
+     A                                      CF03
+     A          R CONFIGS1
+     A                                  1  2DATE
+     A                                      EDTCDE(Y)
+     A                                  1 19' '
+     A                                      DSPATR(RI)
+     A                                  1 23' '
+     A                                      DSPATR(RI)
+     A                                  1 25'     '
+     A                                      DSPATR(RI)
+     A                                  1 31'     '
+     A                                      DSPATR(RI)
+     A                                  1 37'    '
+     A                                      DSPATR(RI)
+     A                                  1 44'   '
+     A                                      DSPATR(RI)
+     A                                  1 49'    '
+     A                                      DSPATR(RI)
+     A                                  1 55'     '
+     A                                      DSPATR(RI)
+     A                                  1 72'CONFIGS1'
+     A                                  2 19' '
+     A                                      DSPATR(RI)
+     A                                  2 23' '
+     A                                      DSPATR(RI)
+     A                                  2 27' '
+     A                                      DSPATR(RI)
+     A                                  2 33' '
+     A                                      DSPATR(RI)
+     A                                  2 37' '
+     A                                      DSPATR(RI)
+     A                                  2 41' '
+     A                                      DSPATR(RI)
+     A                                  2 43' '
+     A                                      DSPATR(RI)
+     A                                  2 47' '
+     A                                      DSPATR(RI)
+     A                                  2 49' '
+     A                                      DSPATR(RI)
+     A                                  2 53' '
+     A                                      DSPATR(RI)
+     A                                  2 57' '
+     A                                      DSPATR(RI)
+     A                                  3 19'     '
+     A                                      DSPATR(RI)
+     A                                  3 27' '
+     A                                      DSPATR(RI)
+     A                                  3 33' '
+     A                                      DSPATR(RI)
+     A                                  3 37'    '
+     A                                      DSPATR(RI)
+     A                                  3 43'     '
+     A                                      DSPATR(RI)
+     A                                  3 49'    '
+     A                                      DSPATR(RI)
+     A                                  3 57' '
+     A                                      DSPATR(RI)
+     A                                  4 19' '
+     A                                      DSPATR(RI)
+     A                                  4 23' '
+     A                                      DSPATR(RI)
+     A                                  4 27' '
+     A                                      DSPATR(RI)
+     A                                  4 33' '
+     A                                      DSPATR(RI)
+     A                                  4 37' '
+     A                                      DSPATR(RI)
+     A                                  4 43' '
+     A                                      DSPATR(RI)
+     A                                  4 47' '
+     A                                      DSPATR(RI)
+     A                                  4 49' '
+     A                                      DSPATR(RI)
+     A                                  4 57' '
+     A                                      DSPATR(RI)
+     A                                  5 19' '
+     A                                      DSPATR(RI)
+     A                                  5 23' '
+     A                                      DSPATR(RI)
+     A                                  5 27' '
+     A                                      DSPATR(RI)
+     A                                  5 33' '
+     A                                      DSPATR(RI)
+     A                                  5 37' '
+     A                                      DSPATR(RI)
+     A                                  5 43' '
+     A                                      DSPATR(RI)
+     A                                  5 47' '
+     A                                      DSPATR(RI)
+     A                                  5 49' '
+     A                                      DSPATR(RI)
+     A                                  5 55'     '
+     A                                      DSPATR(RI)
+     A            SCVERSION     42A  O  7 19
+     A                                 10 13'Would you like to build the sample-
+     A                                       programs?'
+     A            SCBLDSAMP      1A  B 10 63DSPATR(HI)
+     A                                 12 13'Would you like to build HTTPAPI wi-
+     A                                      th SSL support?'
+     A            SCBLDSSL       1A  B 12 63DSPATR(HI)
+     A                                 15 13'Note: SSL support requires the IBM-
+     A                                       Global Secure Toolkit'
+     A                                      DSPATR(HI)
+     A                                 16 19'which in turn requires the followi-
+     A                                      ng licensed programs:'
+     A                                      DSPATR(HI)
+     A                                 18 21'57xx-SS1 Digital Certificate Manag-
+     A                                      er'
+     A                                      DSPATR(HI)
+     A                                 19 21'57xx-DG1 IBM HTTP server for i'
+     A                                      DSPATR(HI)
+     A                                 24  2'F3=Exit'
+     A                                      DSPATR(HI)
+     A                                 24 57'Press ENTER to continue'
+     A                                      DSPATR(HI)
+     A          R CONFIG2S                  SFL
+     A            SCLINE        78   O  3  2
+     A          R CONFIG2C                  SFLCTL(CONFIG2S)
+     A                                      CF08
+     A                                      OVERLAY
+     A N50                                  SFLDSP
+     A N50                                  SFLDSPCTL
+     A  50                                  SFLCLR
+     A N50                                  SFLEND(*MORE)
+     A                                      SFLSIZ(0200)
+     A                                      SFLPAG(0019)
+     A                                  1 28'HTTPAPI License Agreement'
+     A                                      DSPATR(HI)
+     A          R CONFIG2F
+     A                                 24  2'F3=Exit'
+     A                                      DSPATR(HI)
+     A                                 24 30'Press F8 if you agree to the terms-
+     A                                       of this license'
+     A                                      DSPATR(HI)
+     A          R CONFIG3S                  SFL
+     A            SCLINE        78A  O  6  2
+     A          R CONFIG3C                  SFLCTL(CONFIG3S)
+     A                                      SFLSIZ(0200)
+     A                                      SFLPAG(0017)
+     A                                      CF08
+     A                                      OVERLAY
+     A N50                                  SFLDSP
+     A N50                                  SFLDSPCTL
+     A  50                                  SFLCLR
+     A N50                                  SFLEND(*MORE)
+     A                                  1 28'<eXpat/> License Agreement'
+     A                                      DSPATR(HI)
+     A                                  3  4'   The terms and conditions below -
+     A                                      are for the eXpat XML parser which -
+     A                                        '
+     A                                      DSPATR(RI)
+     A                                  4  4'   is a separate open-source proje-
+     A                                      ct from HTTPAPI.                   -
+     A                                        '
+     A                                      DSPATR(RI)
+     A          R CONFIG3F
+     A                                 24  2'F3=Exit'
+     A                                      DSPATR(HI)
+     A                                 24 30'Press F8 if you agree to the terms-
+     A                                       of this license'
+     A                                      DSPATR(HI)
+     A          R CONFIGS4
+     A                                  1  2DATE
+     A                                      EDTCDE(Y)
+     A                                  1 19' '
+     A                                      DSPATR(RI)
+     A                                  1 23' '
+     A                                      DSPATR(RI)
+     A                                  1 25'     '
+     A                                      DSPATR(RI)
+     A                                  1 31'     '
+     A                                      DSPATR(RI)
+     A                                  1 37'    '
+     A                                      DSPATR(RI)
+     A                                  1 44'   '
+     A                                      DSPATR(RI)
+     A                                  1 49'    '
+     A                                      DSPATR(RI)
+     A                                  1 55'     '
+     A                                      DSPATR(RI)
+     A                                  1 72'CONFIGS4'
+     A                                  2 19' '
+     A                                      DSPATR(RI)
+     A                                  2 23' '
+     A                                      DSPATR(RI)
+     A                                  2 27' '
+     A                                      DSPATR(RI)
+     A                                  2 33' '
+     A                                      DSPATR(RI)
+     A                                  2 37' '
+     A                                      DSPATR(RI)
+     A                                  2 41' '
+     A                                      DSPATR(RI)
+     A                                  2 43' '
+     A                                      DSPATR(RI)
+     A                                  2 47' '
+     A                                      DSPATR(RI)
+     A                                  2 49' '
+     A                                      DSPATR(RI)
+     A                                  2 53' '
+     A                                      DSPATR(RI)
+     A                                  2 57' '
+     A                                      DSPATR(RI)
+     A                                  3 19'     '
+     A                                      DSPATR(RI)
+     A                                  3 27' '
+     A                                      DSPATR(RI)
+     A                                  3 33' '
+     A                                      DSPATR(RI)
+     A                                  3 37'    '
+     A                                      DSPATR(RI)
+     A                                  3 43'     '
+     A                                      DSPATR(RI)
+     A                                  3 49'    '
+     A                                      DSPATR(RI)
+     A                                  3 57' '
+     A                                      DSPATR(RI)
+     A                                  4 19' '
+     A                                      DSPATR(RI)
+     A                                  4 23' '
+     A                                      DSPATR(RI)
+     A                                  4 27' '
+     A                                      DSPATR(RI)
+     A                                  4 33' '
+     A                                      DSPATR(RI)
+     A                                  4 37' '
+     A                                      DSPATR(RI)
+     A                                  4 43' '
+     A                                      DSPATR(RI)
+     A                                  4 47' '
+     A                                      DSPATR(RI)
+     A                                  4 49' '
+     A                                      DSPATR(RI)
+     A                                  4 57' '
+     A                                      DSPATR(RI)
+     A                                  5 19' '
+     A                                      DSPATR(RI)
+     A                                  5 23' '
+     A                                      DSPATR(RI)
+     A                                  5 27' '
+     A                                      DSPATR(RI)
+     A                                  5 33' '
+     A                                      DSPATR(RI)
+     A                                  5 37' '
+     A                                      DSPATR(RI)
+     A                                  5 43' '
+     A                                      DSPATR(RI)
+     A                                  5 47' '
+     A                                      DSPATR(RI)
+     A                                  5 49' '
+     A                                      DSPATR(RI)
+     A                                  5 55'     '
+     A                                      DSPATR(RI)
+     A            SCVERSION     42A  O  7 19
+     A                                  9  3'In version 1.10 of HTTPAPI, routin-
+     A                                      es are available for parsing XML da-
+     A                                      ta'
+     A                                 10  3'received from web servers. These r-
+     A                                      outines require the use of an open--
+     A                                      source'
+     A                                 11  3'XML parsing software called <eXpat-
+     A                                      />.'
+     A                                 11 43'http://www.libexpat.org'
+     A                                      DSPATR(HI)
+     A                                 13  3'Would you like to build eXpat from-
+     A                                       source code?'
+     A            SCBLDEXPAT     1A  B 13 68DSPATR(HI)
+     A                                 14  6'- This requires a working ILE C co-
+     A                                      mpiler.'
+     A                                      DSPATR(HI)
+     A                                 15  6'- This requires the System Opennes-
+     A                                      s Includes library'
+     A                                      DSPATR(HI)
+     A                                 16  6'- Select N here if you have a pre--
+     A                                      built copy of eXpat in'
+     A                                      DSPATR(HI)
+     A                                 17 10'LIBHTTP.'
+     A                                      DSPATR(HI)
+     A                                 19  3'Would you like to compile support -
+     A                                      for eXpat into HTTPAPI?'
+     A            SCBLDXML       1A  B 19 68DSPATR(HI)
+     A                                 20  7'- This requires a V7R1 or later re-
+     A                                      lease of the ILE RPG compiler'
+     A                                      DSPATR(HI)
+     A                                 24  2'F3=Exit'
+     A                                      DSPATR(HI)
+     A                                 24 57'Press ENTER to continue'
+     A                                      DSPATR(HI)
+     A          R CONFIGS5
+     A                                  1  2DATE
+     A                                      EDTCDE(Y)
+     A                                  1 19' '
+     A                                      DSPATR(RI)
+     A                                  1 23' '
+     A                                      DSPATR(RI)
+     A                                  1 25'     '
+     A                                      DSPATR(RI)
+     A                                  1 31'     '
+     A                                      DSPATR(RI)
+     A                                  1 37'    '
+     A                                      DSPATR(RI)
+     A                                  1 44'   '
+     A                                      DSPATR(RI)
+     A                                  1 49'    '
+     A                                      DSPATR(RI)
+     A                                  1 55'     '
+     A                                      DSPATR(RI)
+     A                                  1 72'CONFIGS4'
+     A                                  2 19' '
+     A                                      DSPATR(RI)
+     A                                  2 23' '
+     A                                      DSPATR(RI)
+     A                                  2 27' '
+     A                                      DSPATR(RI)
+     A                                  2 33' '
+     A                                      DSPATR(RI)
+     A                                  2 37' '
+     A                                      DSPATR(RI)
+     A                                  2 41' '
+     A                                      DSPATR(RI)
+     A                                  2 43' '
+     A                                      DSPATR(RI)
+     A                                  2 47' '
+     A                                      DSPATR(RI)
+     A                                  2 49' '
+     A                                      DSPATR(RI)
+     A                                  2 53' '
+     A                                      DSPATR(RI)
+     A                                  2 57' '
+     A                                      DSPATR(RI)
+     A                                  3 19'     '
+     A                                      DSPATR(RI)
+     A                                  3 27' '
+     A                                      DSPATR(RI)
+     A                                  3 33' '
+     A                                      DSPATR(RI)
+     A                                  3 37'    '
+     A                                      DSPATR(RI)
+     A                                  3 43'     '
+     A                                      DSPATR(RI)
+     A                                  3 49'    '
+     A                                      DSPATR(RI)
+     A                                  3 57' '
+     A                                      DSPATR(RI)
+     A                                  4 19' '
+     A                                      DSPATR(RI)
+     A                                  4 23' '
+     A                                      DSPATR(RI)
+     A                                  4 27' '
+     A                                      DSPATR(RI)
+     A                                  4 33' '
+     A                                      DSPATR(RI)
+     A                                  4 37' '
+     A                                      DSPATR(RI)
+     A                                  4 43' '
+     A                                      DSPATR(RI)
+     A                                  4 47' '
+     A                                      DSPATR(RI)
+     A                                  4 49' '
+     A                                      DSPATR(RI)
+     A                                  4 57' '
+     A                                      DSPATR(RI)
+     A                                  5 19' '
+     A                                      DSPATR(RI)
+     A                                  5 23' '
+     A                                      DSPATR(RI)
+     A                                  5 27' '
+     A                                      DSPATR(RI)
+     A                                  5 33' '
+     A                                      DSPATR(RI)
+     A                                  5 37' '
+     A                                      DSPATR(RI)
+     A                                  5 43' '
+     A                                      DSPATR(RI)
+     A                                  5 47' '
+     A                                      DSPATR(RI)
+     A                                  5 49' '
+     A                                      DSPATR(RI)
+     A                                  5 55'     '
+     A                                      DSPATR(RI)
+     A            SCVERSION     42A  O  7 19
+     A                                 11 16'Library name for HTTPAPI source:'
+     A            SCSRCLIB      10A  B 11 55
+     A                                 13 16'Library name for HTTPAPI objects:'
+     A            SCINSTLIB     10A  B 13 55
+     A                                 15 16'At runtime, use *LIBL to find HTTP-
+     A                                      API?'
+     A            SCUSELIBL      1   B 15 55
+     A                                 15 59'(Y=Yes, N=No)'
+     A            SCMSG         32A  O 18 25DSPATR(HI)
+     A                                      DSPATR(BL)
+     A                                 24  2'F3=Exit'
+     A                                      DSPATR(HI)
+     A                                 24 57'Press ENTER to continue'
+     A                                      DSPATR(HI)

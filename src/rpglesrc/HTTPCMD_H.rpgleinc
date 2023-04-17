@@ -1,0 +1,23 @@
+      /if defined(HTTPCMD_H_DEFINED)
+      /eof
+      /endif
+      /define HTTPCMD_H_DEFINED
+
+     D HTTPCMDR4       PR
+     D   peUrl                    32767a   varying const
+     D   peDownload                 256a   varying const
+     D   peReqType                    5a           const
+     D   peUpload                   256a   varying const
+     D   peType                      64a   varying const
+     D   peUser                      80a   varying const
+     D   pePass                    1024a   varying const
+     D   peRedir                      4a           const
+     D   peProxy                    256a   varying const
+     D   peProxyUser                 80a   varying const
+     D   peProxyPass               1024a   varying const
+     D   peDebug                    256a   varying const
+     D   peSSLID                    100a   varying const
+     D   peCookies                  256a   varying const
+     D   peSessCook                   4a           const
+     D   peErrMsg                    80a   varying options(*nopass)
+     D   peExitSts                   10i 0         options(*nopass)

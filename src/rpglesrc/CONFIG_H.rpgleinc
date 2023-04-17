@@ -1,0 +1,127 @@
+     ***  If you do not want SSL support, comment out the line below.
+     ***   (You _must_ do this if you're running V4R4 or earlier)
+
+     D/define HAVE_SSLAPI
+
+     ***  define this if your RPG compiler supports 64-bit integers
+     ***  (they were introduced in V4R4)
+     ***
+
+     D/define HAVE_INT64
+
+     ***  define this if your RPG compiler supports
+     ***  options(*SRCSTMT: *NODEBUGIO: *NOSHOWCPY)
+     ***  (they were introduced in V4R4, but can be enabled as far
+     ***   back as V3R2 using PTFs)
+
+     D/define HAVE_SRCSTMT_NODEBUGIO
+
+     ***  In V4R5 it's possible to enable GSKit for SSL via
+     ***    PTFs. However, some functionality wasn't yet available
+     ***    in that release. Define this if you need SSL to be limited
+     ***    to what's available on a V4R5 system. (This is ignored
+     ***    when SSL is disabled.)
+
+     D/undefine V4R5_GSKIT
+
+     ***  This is the default timeout value (in seconds) that HTTPAPI
+     ***  uses if a timeout value isn't specified by the calling
+     ***  program:
+
+     D HTTP_TIMEOUT    C                   CONST(60)
+
+     ***  This is the 'User-Agent' name that is reported by this API
+     ***  to the web servers if you don't specify it explcitly when
+     ***  calling the routines.
+
+     D HTTP_USERAGENT  C                   CONST('http-api/1.45')
+
+     ***  This is the 'Content-Type' that is reported by this API
+     ***  to the web servers if you don't specify it explcitly when
+     ***  calling the POST routines.   (the GET routines, by default,
+     ***  do not specify a content-type.)
+
+     D HTTP_CONTTYPE   C                   CONST('text/xml')
+
+     ***
+     ***  These are the default CCSIDs used when translating between
+     ***  ASCII/EBCDIC.  You can override these at runtime by
+     ***  calling HTTP_setCCSIDs()
+     ***
+     D HTTP_EBCDIC     C                   CONST(0)
+     D HTTP_ASCII      C                   CONST(819)
+
+     ***  This is the codepage or CCSID assigned to downloaded stream
+     ***  files by default. (Note: HTTPAPI does not convert the file
+     ***  to this CCSID, it just assigns this number to the file's
+     ***  attributes.)
+     ***
+     ***  Whether this is treated as a CCSID or a codepage depends on
+     ***  the value of the HTTP USE CCSID condition, below.
+     ***
+     ***  Can be overridden at runtime by calling HTTP_SetFileCCSID()
+
+     D HTTP_CCSID      C                   CONST(819)
+
+     ***  Starting in V5R1, a full CCSID is available in the IFS
+     ***  instead of a codepage. When this is defined, CCSID support
+     ***  will be used instead of codepages
+
+     D/define HTTP_USE_CCSID
+
+     ***  This is the file mode used when creating files in the IFS.
+     ***  (Caution: This mode is given in DECIMAL, not octal!)
+     ***  Octal 666 = Decimal 438  (RW-RW-RW-)
+     ***  Octal 644 = Decimal 420  (RW-R--R--)
+     ***  Octal 777 = Decimal 511  (RWXRWXRWX)
+     ***  Octal 755 = Decimal 493  (RWXR-XR-X)
+
+     D HTTP_IFSMODE    C                   CONST(511)
+
+     ***
+     *** This determines whether Cookies are turned *ON or *OFF
+     *** by default.
+     ***
+     DHTTP_COOKIE_DEFAULT...
+     D                 C                   CONST(*ON)
+
+     ***  This changes whether debugging is on or off by default.
+     ***  You can override this at runtime by calling the http_debug()
+     ***  procedure.
+     D/undefine DEBUG
+     DHTTP_DEBUG_FILE  s            500A   varying
+     D                                     inz('/tmp/httpapi_debug.txt')
+
+     ***  This changes how memory is allocated.  If defined, HTTPAPI
+     ***  will allocate memory in TERASPACE, thus allowing for very
+     ***  large allocations.
+     D/undefine USE_TS_MALLOC64
+     D/undefine USE_TS_MALLOC64
+     ***  With both turned off (default) up to 16 MB per allocation.
+     ***  WARNING: This is currently experimental!!  If you have
+     ***           problems, make sure TERASPACE is undefined.
+     D/undefine TERASPACE
+     D/undefine USE_TS_MALLOC64
+
+     ***  This allows access to V5R3 (or higher) functions in the
+     ***  SSL environment.  Only define this if HTTPAPI will be used
+     ***  on V5R3 or later.
+     D/define V5R3_GSKIT
+
+     ***  NTLM is a Microsoft encryption required by some IIS servers
+     ***  Support for NTLM requires the Cryptographic Access APIs that
+     ***  IBM added in V5R3
+     D/define NTLM_SUPPORT
+
+     ***  The MEMCOUNT option tells HTTPAPI to count the number of
+     ***  dynamic memory allocations/deallocations and report them
+     ***  in the http_debug log. Enable this if you suspect a
+     ***  memory leak.
+     D/undefine MEMCOUNT
+
+     ***  This enables the use of the poll() API instead of the
+     ***  select() API to check timeouts on network traffic.
+     ***  NOTE: In future releases of HTTPAPI, the select() option
+     ***  will be removed, so if you find a need to disable this,
+     ***  PLEASE REPORT IT!
+     D/define USE_POLL

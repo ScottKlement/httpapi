@@ -1,0 +1,9 @@
+      /if not defined(COPYRIGHT_DSPEC)
+     H COPYRIGHT('Copyright (c) 2012-2023,-
+     H NTLM authentication v1.4.0 - 22.12.2014 by Thomas Raddatz')
+      /eof
+      /endif
+     D cNTLM_VERSION...
+     D                 C                   '1.4.0'
+     D cNTLM_DATE...
+     D                 C                   '2014-12-22'

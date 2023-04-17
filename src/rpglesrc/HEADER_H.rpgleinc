@@ -1,0 +1,14 @@
+     D header_parse    PR
+     D   resp                     32767A   varying const
+     D   userdata                      *   value
+
+     D header_load_cookies...
+     D                 PR
+     D   req_domain                 256A   varying const
+     D   req_path                   256A   varying const
+
+     D header_get_req_cookies...
+     D                 PR         32767A   varying
+     D   host                       256A   varying const
+     D   path                     32767A   varying const
+     D   Secure                       1N   const

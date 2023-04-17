@@ -1,0 +1,109 @@
+      *=====================================================================*
+      *  NTLM: Authentication Plugin - Public                               *
+      *=====================================================================*
+      *  Author  :  Thomas Raddatz                                          *
+      *  Date    :  21.05.2012                                              *
+      *  E-mail  :  thomas.raddatz§tools400.de                              *
+      *  Homepage:  www.tools400.de                                         *
+      *=====================================================================*
+      /IF NOT DEFINED(NTLM_H)
+      /DEFINE NTLM_H
+      *
+      *  Returns cTrue if the server requires authentication.
+      *
+     D AuthPlugin_isAuthenticationRequired...
+     D                 PR              N
+     D                                     extproc('NTLMR4_+
+     D                                     AuthPlugin_isAuthenticationRequired+
+     D                                     ')
+      *
+      *  Returns the realm.
+      *
+     D AuthPlugin_getRealm...
+     D                 PR           124A   varying
+     D                                     extproc('NTLMR4_+
+     D                                     AuthPlugin_getRealm+
+     D                                     ')
+      *
+      *  Sets the NTLM authentication credentials
+      *  Called by procedure http_setAuth() of module HTTPAPIR4.
+      *
+      *  i_authType  = Authentication type used to specify login credentials.
+      *  i_username  = User name to use.
+      *  i_passwd    = Password to use.
+      *
+     D AuthPlugin_setAuthentication...
+     D                 PR              N
+     D                                     extproc('NTLMR4_+
+     D                                     AuthPlugin_setAuthentication+
+     D                                     ')
+     D  i_authType                    1A   const
+     D  i_username                   80A   const
+     D  i_passwd                   1024A   const
+      *
+      *  Resets authentication parameters.
+      *
+     D AuthPlugin_resetAuthentication...
+     D                 PR
+     D                                     extproc('NTLMR4_+
+     D                                     AuthPlugin_resetAuthentication+
+     D                                     ')
+      *
+      *  Interprets a given authentication header.
+      *
+      *  i_header    = Authentication header that must be interpreted.
+      *
+     D AuthPlugin_interpretAuthenticationHeader...
+     D                 PR
+     D                                     extproc('NTLMR4_+
+     D                                     AuthPlugin_+
+     D                                     interpretAuthenticationHeader+
+     D                                     ')
+     D  i_header                   2048A   const
+      *
+      *  Returns *ON if, HTTPAPI should receive the the 401 error page and
+      *  returns the procedure that is called to receive the error page.
+      *
+      *  io_saveProc = Procedure pointer of the procedure that is called
+      *                to receive the error page.
+      *  io_saveFD   = File descriptor that is passed to io_saveProc.
+      *
+     D AuthPlugin_mustReceiceAuthErrorPage...
+     D                 PR              N
+     D                                     extproc('NTLMR4_+
+     D                                     AuthPlugin_mustReceiceAuthErrorPage+
+     D                                     ')
+     D  io_saveProc                    *          procptr
+     D  io_saveFD                    10I 0
+      *
+      *  Negotiates the NTLM authentication parameters with the server and
+      *  produces the NTLM authentication header value (type-3) message.
+      *  Called by procedure http_persist_req() of module HTTPAPIR4.
+      *
+      *  i_comm      = Pointer to persistent HTTP comm session.
+      *  i_URL       = URL to GET from or POST with persistent HTTP comm.
+      *  i_timeout   = Timeout is seconds when no data is received.
+      *
+     D AuthPlugin_negotiateAuthentication...
+     D                 PR            10I 0
+     D                                     extproc('NTLMR4_+
+     D                                     AuthPlugin_negotiateAuthentication+
+     D                                     ')
+     D  i_comm                         *   const
+     D  i_URL                     32767A   const  varying options(*varsize)
+     D  i_timeout                    10I 0 const
+      *
+      *  Produces the NTLM authentication header when negotiating
+      *  the NTLM authentication parameters with the server.
+      *
+      *  io_reqChain = HTTP request chain that is send to the server.
+      *
+     D AuthPlugin_produceAuthenticationHeader...
+     D                 PR
+     D                                     extproc('NTLMR4_+
+     D                                     AuthPlugin_+
+     D                                     produceAuthenticationHeader+
+     D                                     ')
+     D  io_reqChain               32767A   varying
+      *
+      /ENDIF

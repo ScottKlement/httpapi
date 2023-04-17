@@ -1,0 +1,56 @@
+     A                                      DSPSIZ(24 80 *DS3)
+     A                                      CF03(03)
+     A                                      INDARA
+     A          R TRACKNO
+     A                                  1 32'Track UPS Package'
+     A                                      DSPATR(HI)
+     A                                 12 15'Enter Tracking No:'
+     A            SCTRACKNO     24A  B 12 34
+     A            SCMSG         78   O 23  2DSPATR(HI)
+     A                                      DSPATR(BL)
+     A                                 24  2'F3=Exit'
+     A                                      DSPATR(HI)
+     A          R SFLREC                    SFL
+     A            SCSTATUS      20A  O  5  2
+     A            SCDATE        10   O  5 23
+     A            SCTIME         8   O  5 34
+     A            SCCITY        13A  O  5 43
+     A            SCSTATE        2A  O  5 57
+     A            SCDESC        20A  O  5 60
+     A          R SFLCTL                    SFLCTL(SFLREC)
+     A                                      SFLSIZ(9999)
+     A                                      SFLPAG(0018)
+     A N51                                  SFLDSP
+     A N50                                  SFLDSPCTL
+     A  50                                  SFLCLR
+     A N51                                  SFLEND
+     A                                      OVERLAY
+     A                                  1  2DATE
+     A                                      EDTCDE(Y)
+     A                                  1 32'Track UPS Package'
+     A                                      DSPATR(HI)
+     A            SCTRACKNO     24A  O  1 50
+     A                                  2 40'Signed By'
+     A                                      DSPATR(HI)
+     A            SCSIGNEDBY    20A  O  2 50
+     A                                  4  2'      Status        '
+     A                                      DSPATR(HI)
+     A                                      DSPATR(UL)
+     A                                  4 23'   Date   '
+     A                                      DSPATR(HI)
+     A                                      DSPATR(UL)
+     A                                  4 34'  Time  '
+     A                                      DSPATR(HI)
+     A                                      DSPATR(UL)
+     A                                  4 43'    City     '
+     A                                      DSPATR(HI)
+     A                                      DSPATR(UL)
+     A                                  4 57'St'
+     A                                      DSPATR(HI)
+     A                                      DSPATR(UL)
+     A                                  4 60'    Description     '
+     A                                      DSPATR(HI)
+     A                                      DSPATR(UL)
+     A          R SFLFTR
+     A                                 24  2'F3=Exit'
+     A                                      DSPATR(HI)

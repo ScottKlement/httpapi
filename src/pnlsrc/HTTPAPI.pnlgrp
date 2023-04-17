@@ -1,0 +1,355 @@
+:pnlgrp.
+.************************************************************************
+.*  Help for command HTTPAPI
+.************************************************************************
+:help name='HTTPAPI'.
+HTTPAPI CL Interface - Help
+:p.The HTTPAPI CL Interface (HTTPAPI) command provides a simple
+command-line interface to the HTTPAPI tool. It makes it simple to
+retrieve (GET) a document from an HTTP server, or to send a file
+(POST) to a program running on an HTTP server, and get it's response.
+:p.The HTTPAPI command provides only a subset of the functionality
+available in HTTPAPI. For more complicated tasks, it's recommended
+that you call the API directly from your ILE RPG program instead
+of utilizing the simplified command interface.
+:p.:hp2.Restrictions::ehp2.
+:ul.
+:li.
+You must have *OBJEXIST authority to the IFS directory specified
+in the DOWNLOAD parameter.
+:li.
+If you make a POST request, you must have *R (read) authority
+to the file specified in the UPLOAD parameter, and *RX (read/exec)
+authority to the folders in the object's path.
+:li.
+If you enable DEBUG support, you must have *OBJEXIST authority
+to the folder in which the debug file will be created.
+:li.
+Each user who wishes to access an SSL-protected HTTP server, must
+be enrolled in the Digital Certificate Manager.  (See the README
+member in the QRPGLESRC file for more information.)
+:li.
+This command should not be run from a multi-threaded application.
+.* Parameter-level restrictions belong in parameter help sections, not here.
+:eul.
+:ehelp.
+.*******************************************
+.*   Help for parameter URL
+.*******************************************
+:help name='HTTPAPI/URL'.
+HTTP URL (i.e. "web address") (URL) - Help
+:xh3.HTTP URL (i.e. "web address") (URL)
+:p.Specifies the HTTP or HTTPS Uniform Resource Locator (URL)
+(often referred to as a "web address") for the HTTP resource
+to be accessed.
+:p.This is a required parameter.
+:parml.
+:pt.:pv.character-value:epv.
+:pd.
+Specify the URL to access, for example:
+:p.
+   http://www.scottklement.com/rpg/socktut/index.html
+:eparml.
+:ehelp.
+.*******************************************
+.*   Help for parameter DOWNLOAD
+.*******************************************
+:help name='HTTPAPI/DOWNLOAD'.
+Stream file to save result to (DOWNLOAD) - Help
+:xh3.Stream file to save result to (DOWNLOAD)
+:p.Specifies the location that HTTPAPI will store any information
+returned by the HTTP server at the URL you specified.
+:p.This is a required parameter.
+:parml.
+:pt.:pv.path-name:epv.
+:pd.
+Specify a path name in the Integrated File System (IFS).
+The contents of this IFS object will be replaced.
+:eparml.
+:ehelp.
+.*******************************************
+.*   Help for parameter REQTYPE
+.*******************************************
+:help name='HTTPAPI/REQTYPE'.
+Request type (REQTYPE) - Help
+:xh3.Request type (REQTYPE)
+:p.Specifies the type of HTTP request to make.
+:parml.
+:pt.:pk def.*GET:epk.
+:pd.
+An HTTP GET request will be made. HTTPAPI will contact the
+HTTP server, issue a GET request to the URL specified, and
+save any response to the DOWNLOAD file.  (The UPLOAD parameter
+is ignored.)
+:pt.:pk.*POST:epk.
+:pd.
+An HTTP POST request will be made. HTTPAPI will contact the
+HTTP server, upload the file specified in the UPLOAD parameter,
+and save any response to the DOWNLOAD file.
+:eparml.
+:ehelp.
+.*******************************************
+.*   Help for parameter UPLOAD
+.*******************************************
+:help name='HTTPAPI/UPLOAD'.
+Stream file with POST data (UPLOAD) - Help
+:xh3.Stream file with POST data (UPLOAD)
+:p.Specifies the IFS file to be uploaded for a POST request.
+:parml.
+:pt.:pk def.*NONE:epk.
+:pd.
+No data will be sent.
+:pt.:pv.path-name:epv.
+:pd.
+Specify the Integrated File System (IFS) path name of the object to
+be sent to the server as part of a *POST request. (This parameter
+is ignored if a *GET request is made.)
+:eparml.
+:ehelp.
+.*******************************************
+.*   Help for parameter TYPE
+.*******************************************
+:help name='HTTPAPI/TYPE'.
+Content-Type of POST data (TYPE) - Help
+:xh3.Content-Type of POST data (TYPE)
+:p.Tells the HTTP server what sort of content you are sending
+in a *POST request.  This value is not checked by HTTPAPI, but
+is sent to the server as a "hint."  It is up to the HTTP server
+to determine how this information is used.
+:parml.
+:pt.:pk def.'text/xml':epk.
+:pd.
+The data specified by the UPLOAD parameter is an XML document
+:pt.:pv.character-value:epv.
+:pd.
+Specify the MIME content-type of the data you are uploading.
+:eparml.
+:ehelp.
+.*******************************************
+.*   Help for parameter USER
+.*******************************************
+:help name='HTTPAPI/USER'.
+User ID (USER) - Help
+:xh3.User ID (USER)
+:p.Specifies the USER-ID required to log in to the HTTP server.
+:parml.
+:pt.:pk def.*NONE:epk.
+:pd.
+No User-ID is sent.
+:pt.:pv.character-value:epv.
+:pd.
+Specify the User-ID to send.  It will be sent using the basic
+HTTP authentication mechanism.  Use caution, basic authentication
+does not use encryption, so this user-id will be sent over the
+network in clear text unless SSL is used.
+:eparml.
+:ehelp.
+.*******************************************
+.*   Help for parameter PASS
+.*******************************************
+:help name='HTTPAPI/PASS'.
+Password (PASS) - Help
+:xh3.Password (PASS)
+:p.Specifies a password required to log in to the HTTP server.
+:parml.
+:pt.:pk def.*NONE:epk.
+:pd.
+No password is sent.
+:pt.:pv.character-value:epv.
+:pd.
+Specify the password to send.  It will be sent using the basic
+HTTP authentication mechanism.  Use caution, basic authentication
+does not use encryption, so this password will be sent over the
+network in clear text unless SSL is used.
+:eparml.
+:ehelp.
+.*******************************************
+.*   Help for parameter REDIRECT
+.*******************************************
+:help name='HTTPAPI/REDIRECT'.
+Follow redirects? (REDIRECT) - Help
+:xh3.Follow redirects? (REDIRECT)
+:p.Sometimes an HTTP server will not respond to a request directly,
+but will instead redirect you to a different URL.  This parameter
+specifies whether HTTPAPI should automatically follow that redirect.
+:parml.
+:pt.:pk def.*YES:epk.
+:pd.
+If an HTTP redirect is given, HTTPAPI will automatically follow
+that redirect and download the response from the new URL.
+:pt.:pk.*NO:epk.
+:pd.
+HTTPAPI will not follow the redirect.  Instead, if a redirect is
+issued, HTTPAPI will report a 302 or 303 error.
+:eparml.
+:ehelp.
+.*******************************************
+.*   Help for parameter PROXY
+.*******************************************
+:help name='HTTPAPI/PROXY'.
+Proxy hostname (PROXY) - Help
+:xh3.Proxy hostname (PROXY)
+:p.Specifies the host name of a proxy server that HTTPAPI should
+route it's requests through.
+:parml.
+:pt.:pk def.*NONE:epk.
+:pd.
+No proxy is used.  The HTTP server will be contacted directly.
+:pt.:pv.character-value:epv.
+:pd.
+Specify the host name of the proxy server.
+:eparml.
+:ehelp.
+.*******************************************
+.*   Help for parameter PROXYUSER
+.*******************************************
+:help name='HTTPAPI/PROXYUSER'.
+Proxy User ID (PROXYUSER) - Help
+:xh3.Proxy User ID (PROXYUSER)
+:p.Specifies a user-id required to log in to the proxy server.
+:parml.
+:pt.:pk def.*NONE:epk.
+:pd.
+No user-id will be sent.
+:pt.:pv.character-value:epv.
+:pd.
+Specify the user-id.
+:eparml.
+:ehelp.
+.*******************************************
+.*   Help for parameter PROXYPASS
+.*******************************************
+:help name='HTTPAPI/PROXYPASS'.
+Proxy Password (PROXYPASS) - Help
+:xh3.Proxy Password (PROXYPASS)
+:p.Specifies the password required to log in to the proxy server.
+:parml.
+:pt.:pk def.*NONE:epk.
+:pd.
+No password will be sent.
+:pt.:pv.character-value:epv.
+:pd.
+Specify the password.
+:eparml.
+:ehelp.
+.*******************************************
+.*   Help for parameter DEBUG
+.*******************************************
+:help name='HTTPAPI/DEBUG'.
+Stream file for HTTP debug (DEBUG) - Help
+:xh3.Stream file for HTTP debug (DEBUG)
+:p.Specifies whether HTTPAPI should write debugging/tracing
+information to a stream file in the IFS.
+:parml.
+:pt.:pk def.*NONE:epk.
+:pd.
+No debug/trace information will be generated.
+:pt.:pv.path-name:epv.
+:pd.
+Specify the IFS path name of the file that HTTPAPI will save
+debug/trace information into.
+:eparml.
+:ehelp.
+.*******************************************
+.*   Help for parameter SSLID
+.*******************************************
+:help name='HTTPAPI/SSLID'.
+SSL application ID (SSLID) - Help
+:xh3.SSL application ID (SSLID)
+:p.The i5/OS Digital Certificate Manager is used to control how
+the SSL support in i5/OS works.  This parameter lets you specify
+which application configuration in the DCM will be used for this
+HTTPAPI request.
+:parml.
+:pt.:pk def.*DFT:epk.
+:pd.
+The default SSL settings provided by the *SYSTEM certificate store
+will be used for this request.  (The *SYSTEM certificate store must
+already exist for this function to work properly.)
+:pt.:pv.character-value:epv.
+:pd.
+Specify the Application ID profile (under Manage Applications in
+the Digital Certificate Manager) for HTTPAPI to use.
+:p.This value is required if you want to use client certificates
+or you want to specify an explicit CA trust list.
+:eparml.
+:ehelp.
+.*******************************************
+.*   Help for parameter COOKIES
+.*******************************************
+:help name='HTTPAPI/COOKIES'.
+Stream file to keep cookies (COOKIES) - Help
+:xh3.Stream file to keep cookies (COOKIES)
+:p.Path name of stream file to be used to store any HTTP cookies
+that should persist between calls to HTTPAPI.  If this file exists
+HTTPAPI will open it at startup and load any existing cookies into
+memory.  When the HTTP request is finished, any persistent cookies
+left in memory will be written back to the file.
+:parml.
+:pt.:pk def.*NONE:epk.
+:pd.
+HTTPAPI will start with no cookies in memory.  Any cookies sent by
+the HTTP server will be stored in memory only, and will persist until
+the HTTPAPI activation group is reclaimed, at which time they will
+be discarded.
+:pt.:pv.path-name:epv.
+:pd.
+Specify an IFS path name to a stream file.  This file will be
+created if it does not already exist.  The file will be used to
+load/store cookies so that they can persist across multiple jobs
+and/or activation groups.  Use this parameter to make it possible
+for HTTP servers to set cookies that persist beyond the current
+session.
+:eparml.
+:ehelp.
+.**************************************************
+.*
+.* Examples for HTTPAPI
+.*
+.**************************************************
+:help name='HTTPAPI/COMMAND/EXAMPLES'.
+Examples for HTTPAPI - Help
+:xh3.Examples for HTTPAPI
+:p.:hp2.Example 1: GET Command Example:ehp2.
+:xmp.
+HTTPAPI URL('http://www.scottklement.com/rpg/socktut/tutorial.pdf')
+          DOWNLOAD('/tmp/socket_tutorial.pdf')
+:exmp.
+:p.This command downloads a PDF document (in this example, Scott's
+socket programming tutorial) from an HTTP server to the /tmp
+directory in your IFS.
+.*
+:p.:hp2.Example 2: POST Complex Command Example:ehp2.
+:xmp.
+HTTPAPI URL('http://www.scottklement.com/cgi-bin/email_comment.cgi')
+          DOWNLOAD('/tmp/response.txt')
+          REQTYPE(*POST)
+          UPLOAD('/tmp/post.dat')
+          TYPE('application/x-www-form-urlencoded')
+:exmp.
+:p.This command sends the contents of the /tmp/post.dat file to
+the /cgi-bin/email_comment.cgi program running on the HTTP server.
+It retrieves the response from the HTTP server into the
+/tmp/response.txt file in the IFS.
+:ehelp.
+.**************************************************
+.*
+.* Error messages for HTTPAPI
+.*
+.**************************************************
+:help name='HTTPAPI/ERROR/MESSAGES'.
+&msg(CPX0005,QCPFMSG). HTTPAPI - Help
+:xh3.&msg(CPX0005,QCPFMSG). HTTPAPI
+:p.:hp3.*ESCAPE &msg(CPX0006,QCPFMSG).:ehp3.
+.************************************************************************
+.* List the *ESCAPE, *STATUS, and *NOTIFY messages signalled from the command.
+.* The following are generic messages defined in message file QCPFMSG.
+.* Modify this list to match the list of error messages for the command.
+.************************************************************************
+:DL COMPACT.
+:DT.CPF9897
+:DD.Currently, HTTPAPI reports all errors as CPF9897.
+:EDL.
+:ehelp.
+:epnlgrp.
+

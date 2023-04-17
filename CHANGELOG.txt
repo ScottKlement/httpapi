@@ -1,0 +1,706 @@
+Changes to version 1.46 from 1.45
+  - Convert source to IFS files
+  - Create Makefile for building easily
+
+Changes to version 1.45 from 1.44
+  - Change HTTPAPI command so it doesn't report a failure when
+     status is in the 2xx range.
+
+Changes to version 1.44 from 1.43:
+  - Increased maximum length of http_setAuth 3rd parameter to 15000
+
+Changes to version 1.43 from 1.42:
+  - Changed network routines to use the poll() API instead of select()
+     to monitor for timeouts.  The select() option can be enabled
+     by undefining USE_POLL in config_h, however, this feature will
+     be removed in a future update, so if you find a need to disable
+     poll(), please notify Scott.
+  - Added optional Content-Type header to http_mfd_encoder_addvar
+     and http_mfd_encoder_addvar_s. Increased maximum size of content-
+     type header on http_mfd_encoder_addstmf.
+  - Added parameter for TLS v1.3 to https_init()
+  - Added 'accept' to http_setOption()
+  - Added HTTP_AUTH_BEARER and HTTP_AUTH_USRDFN authentication types
+  - Fix problem where HTTP_nextXmlAttrUCS was not found when building
+     without Expat/XML support.
+
+Changes to version 1.42 from 1.41:
+  - Return the correct HTTP response code for 401, 407 (auth needed)
+     when calling http_error() to get the response
+  - Added safety checks in CommTCP_BlockWrite and CommSSL_BlockWrite
+     to prevent pointer offset from going outside the limit of the
+     space/buffer containing the data.
+  - Add export for https_certStore(), was somehow left off when the
+     feature was added.
+
+Changes to version 1.41 from 1.40:
+  - Added a *DIAG message when unlink() of the http_debug file
+    fails.
+  - http_xmlReturnUcs() now applies to attributes as well as
+    values.
+  - Increase refill() safetyNet to 1000, and add an error message
+    when safetyNet threshold is exceeded.
+
+Changes to version 1.40 from 1.39:
+  - Don't send *ESCAPE message from http_string or http_stmf when
+    the HTTP code is 2xx.
+  - Fix HTTP_SetFileCCSID when using it with http_req and http_stmf
+    (prior to this, http_setOption worked, but http_setFileCCSID did
+    not, unless you used the older APIs)
+  - Fix bug in the above fileccsid code where the global pointer
+    was not always set when FILE_CCSID was called
+  - Add new Multipart/Related (MPR) encoders and decoders contributed
+    by Roberto Bizzozero
+
+Changes to version 1.39 from 1.38:
+  - Fixed ALGD0200 declaration in ENCRYPTR4 -- though, this should
+    not impact current users. (Thomas Raddatz)
+  - Correct international handling of $Version string in Cookie
+    header routines.
+
+Changes to version 1.38 from 1.37:
+  - Added memory alloc/dealloc diagnostic routines
+  - Fixed memory leaks -- comm drivers were not cleaned up
+  - fixed mismatches with regular alloc vs xalloc
+
+Changes to version 1.37 from 1.36:
+  - Fix problem where debugLevel not propagated properly
+  - Added buffering to COMMTCPR4 to improve LineRead performance
+  - Added buffering to COMMSSLR4 to improve LineRead performance
+
+Changes to version 1.36 from 1.35:
+  - Fix problem where http_persist_close() would get a pointer error
+    if http_persist_open() failed during SSL handshake.
+
+Changes to version 1.35 from 1.34:
+  - Fix bugs in http_stmf() and http_req() when sending a stream file.
+      The content-type and content-length were not calculated correctly
+
+Changes to version 1.34 from 1.33
+  - If a procedure or non-null pointer is provided for "upload" data
+      (i.e. POST, PUT or other stream upload data) but data length=0,
+      then send a zero-length request body. Omitting Content-Length
+      on a PUT/POST request causes "411 Length Required" on some
+      servers. (Broken since 1.24BETA15)
+  - Added routines to hopefully make httpapi easier to use
+      http_req, http_setOption, http_urlEncode, http_string, http_stmf
+  - Added https_certStore() API to allow the use of an alternate
+      certificate store with label and password.
+  - Remove resriction that blocked the use of colons in password
+      values (http_setAuth, http_proxy_setAuth routines)
+  - Add dbgview(*list) when building httpcmdr4/httpqshr4
+
+Changes to version 1.33 from 1.32
+  - If you call http_setCCSIDs() and provide the same CCSID for
+      both local/remote post data, HTTPAPI will treat your data
+      as "binary" and not translate it.  (Currently does not
+      work with URL encoder.)
+  - Server Name Indication (SNI) was incorrectly using the proxy
+      host name instead of the endpoint host name in SSL connections
+      that used a proxy.
+  - Fixed parsing of cookie timestamps. Before this fix, skipping
+      whitespace caused first char of month/year to get dropped.
+      (Fix by David Lerman)
+
+Changes to version 1.32 from 1.31
+  - Fixed "index out of range" error in the getToken() procedure
+      in NTLMR4 (Thomas Raddatz)
+  - Removed duplicate procedure names from procedure interface and
+      end procedure statements in NTLMR4 (Thomas Raddatz)
+
+Changes to version 1.31 from 1.30
+  - IBM has informed us that their TLS/SSL code in GSKit can cause
+      a blocking even on a non-blocking socket. They advised setting
+      GSK_IBMI_READ_TIMEOUT to avoid this.
+
+Changes to version 1.30 from 1.29
+  - If SSL handshake fails, abort process without dumping SSL
+      diagnostics first. (Eliminate 'operation not valid for SSL
+      session state' errors.)
+  - Added in a dummy entry to the final STRPGMEXP block in HTTPAPI2.
+      Needed fir compatibility with V5R1 and older releases.
+  - Lengthen variable name allowed on http_url_encoder_addvar and
+      http_url_encoder_addvar_s, and eliminate data limit on the
+      latter.
+  - Upgrade Expat to 2.1.0
+  - Remove old/obsolete support for connecting with non-blocking
+  - Remove old/obsolete support for translation with table objects
+  - Added http_setDebugLevel() and extra debuggging info for
+      testing performance/timeout errors when using CommSSL driver
+
+Changes to version 1.29 from 1.28
+  - Parse HTTP headers even if a "no-content" (204 or 304) response
+      is received from the HTTP server.
+  - change www.scottklement.com to scottklement.com in SSL examples
+  - change upload.bat (in ZIP installer) to start in a valid library
+      before setting to namefmt 0.
+  - Check that port number is a valid numeric value (Thomas Raddatz)
+
+Changes to version 1.28 from 1.27
+  - Disable NTLM support on V5R2 and older.
+  - Fixed bug since 1.27 where XMLSTUBR4 didn't have all needed exports
+
+Changes to version 1.27 from 1.26
+  - Fixed user-agent string (forgot to update version)
+  - Added NTLM support (thanks to Thomas Raddatz)
+
+Changes to version 1.26 from 1.25
+  - Disabled Nagle's algorithm (thanks for Brian Beaton)
+  - When no additional header block is needed, send the entire
+     request chain in a single buffer (for performance)
+     (thanks to Peter Sawatzki for this suggestion)
+  - Added support for TLS versions 1.1 and 1.2 (requires IBM i 7.1
+     with TR6 installed or newer, and QSSLPCL sysval configured)
+  - Added support for Server Name Indication (SNI) on SSL
+     connections.
+
+Changes to version 1.25 from 1.24
+  - BETA1: Removed options(*trim) from prototype for
+     http_persist_req for V5R2 compatibility.
+  - BETA1: Added 303 to redirects in HTTPCMDR4.
+  - BETA1: HTTPCMDR4 was only closing files when fd > STDOUT.
+     This caused files to stay open when run from a job that
+     didn't have stdin/stdout/stderr descriptors open. As a
+     result, this didn't happen in QShell, but happened
+     sometimes when calling HTTPCMDR4 via the CL command
+     interface.
+  - BETA2: WEBFORM_setVar/http_url_encoder_addvar would crash
+     if length of variable or data was 0. Fixed.
+  - BETA3: Fix bug in http_EscapeXML -- was translating > to &lt;,
+     now translating > to &gt;.  (Whoops!)
+  - BETA4: Bug in proxy_tunnel(): Proxy tunnelling used for SSL
+     requests was only working for default ports of 80/443, and
+     was changing the port to 0, otherwise.
+  - BETA5: SendDoc() was ignoring errors from comm_BlockWrite()
+     so session could get stuck until an MCH0601 occurs.
+
+Changes to version 1.24 from 1.23
+  - BETA1: Don't translate cookie name to lowercase.  Keep original
+     case of cookie name. (This shouldn't be necessary, according
+     to RFC2109... but apparently in some cases it's necessary)
+  - BETA2: Fixed bug in BETA1. upper/lower translation in beta2
+     (for lcname variable) was not working properly.
+  - BETA3: Force debug file to close any time you call the
+     http_debug() API.  This way you can change the debug
+     file mid-stream.
+  - BETA3: Tired of only one entry in the debug file!!  Changed
+     http_debug(*ON) so it deletes any existing debug file.
+     changed debug_open() to append debug file so that file is
+     only restarted when http_debug(*ON) is called with the
+     same filename.
+  - BETA3: Fix typo "http_conp" vs "http_comp" in comments.
+  - BETA4: Added lots of RCVMSG statements to INSTALL in
+     order to eliminate various error messages that the installer
+     sometimes EXPECTS to receive.  These messages were confusing
+     people.
+  - BETA4: Added HTTPQSHR4 for QShell support.
+  - BETA4: Clarify the use of *omit vs *Blanks for peSoapAction
+           in HTTPAPI_H comments.
+  - BETA4: Change HTTP_long_ParseURL to use the last @ symbol
+           as a userid delimiter instead of the first one.
+  - BETA4: Fix bug in cookie_match -- if entire host name
+           specified with leading dot, match failed.
+  - BETA4: Added ability to save session cookies to cookie
+           file (mainly useful from QShell scripts where
+           it wouldn't otherwise be possible to maintain
+           session cookies)
+  - BETA4: Increased size of ADDL_HEADER callback to 32k
+           (idea suggested by Nick Townsend, but I couldn't
+           use his code since it conflicted with newer
+           features that were already added.)
+  - BETA5: Added code to translate ' ' to '%20' in a URL
+           (like a browser does). It makes things a little
+           more dummy-proof.
+  - BETA5: Added HTTP_nextXmlAttr() routine to make it easier
+           to parse XML attributes.
+  - BETA5: Apparently, some obscure HTTP servers send response
+           chains where keywords end with (invalid) x'0a'
+           instead of (valid) x'0d0a'.  Fixed code to handle
+           that.
+  - BETA5: Mod from Peter Connell to enable keyring filename
+           instead of appid in https_init()
+  - BETA6: Added content-type parsing code from Thomas Raddatz
+  - BETA6: Added HTTP_EscapeXML routine to assist in building
+            well-formed XML code.
+  - BETA6: Tired of problems with 100-continue! I changed the
+            http_set_100_continue_timeout() to allow 0=disable.
+            and set disable as the default.
+  - BETA6: *OMIT parameters didn't work in persist_get/persist_post
+  - BETA6: Force httpdate() to return an English date. The HTTP
+           standard only understands dates in English. (Previously
+           httpdate() returned the date in the language of the box
+           you were running -- which caused errors if you weren't
+           running English.)
+  - BETA6: Now URL encoder now uses same translation table that
+           POST data does, so you can have UTF-8 data if you want.
+  - BETA6: Content-type parameter on GET requests is now completely
+           ignored. (It never made sense, anyway.)
+  - BETA6: Allow url encoder to translate to other CCSIDs, before
+           sending, using the same CCSID parameters as POST data.
+  - BETA6: Allow peSoapAction to have up to 16384 characters
+           (used pointer magic & /define logic to preserve
+           backward compatibility)
+  - BETA6: Attempt to eliminate GSkit#5 (Operation which is not
+           Valid for current session state) at gsk_env_init.
+  - BETA6: Allow peContentType & peUserAgent to have 16384 chars
+           like peSoapAction.
+  - BETA6: Began revamping EXAMPLExx members, to be in proper
+           sequence and provide a good learning path.
+           (Did not finish this at the top of BETA6 release.)
+  - BETA7: Added diagnostic messages to job log when unable to
+           open a debug file.
+  - BETA8: Fixed problem with debug_close() not always closing
+           debug file.
+  - BETA8: Copy/Paste error had Comm_LineWrite() defined with
+           extproc(p_CommLineRead). Oops! However, since HTTPAPI
+           doesn't currently use Comm_LineWrite(), this didn't
+           break anything.
+  - BETA8: Fix problem with https_init() thinking it's already
+           initialized after prior https_init() call failed
+           (added calls to https_cleanup when it fails)
+  - BETA9: Added %trimr() to all IFS opens to make them more
+           dummy-proof.
+  - BETA10: Fix a (doh!) pointer offset error in SendDoc.
+  - BETA10: Rename debug_msg/debug_write to http_dmsg/http_dwrite
+            and export them so that others can write to the debug
+            logs (i.e. such as handlers and WSDL2RPG)
+  - BETA11: made iconvdyn() a little more conservative in it's
+            memory allocation.  Previously, it was starting with
+            double the input buffer size, and if more memory was
+            required, was increasing the allocation by 4X the
+            input size.  Problem is that a 4MB document could
+            run out of memory!  New routine starts with the same
+            output size as input size...  so if input is 16 MB,
+            routine should work (unless output needs to be larger
+            than 16MB.)  If output needs to be increased, it's
+            done in a fixed-size of 64k.  This should have only
+            a minor effect on performance, but doesn't grow the
+            memory exponentially.
+  - BETA11: Fixed bug in header_parse that caused HTTPAPI to
+            crash when a header had no value. (keyword:<crlf>)
+  - BETA11: made http_header() search by case-insensitive name
+  - BETA12: Fixed up several problems in cookie file handling
+            seem to have been broken when adding case-insensitivity
+            cd_lcname was unset when loading from cookie_file,
+            session cookies weren't written even when requested,
+            cd_temp was set before p_cookie_data was set (MCH3601),
+            and cookie_dump could potentially close incorrect
+            descriptor (potentially messing up CommTCP_Read)
+  - BETA13: http_long_ParseURL would crash on a blank URL.
+            Fixed routine to return an error message.
+  - BETA14: Added http_xmlReturnUCS to allow the XML parser
+            to return output in UCS-2 Unicode
+  - BETA15: Added http_persist_req() as a method of invoking
+            any HTTP method (not limited to GET/POST). It's
+            expected that an http_req() procedure will be added
+            in next release that will utilize this.
+
+
+Changes to version 1.23 from 1.22
+  - Added http_parse_xml_string() routine to enable parsing XML
+     from a character string in memory (instead of a file or
+     HTTP stream.)
+
+Changes to version 1.22 from 1.21
+  - Changed EXAMPLE2 to specify the content-type
+  - Added http_parser_switch_cb() routine to let you delegate
+     XML processing to a different subprocedure.  This code
+     was contributed by Thomas Raddatz
+  - Added EXAMPLE21 for Thomas Raddatz's parser_switch_cb() stuff.
+  - Change INSTALL to calculate i5/OS version correctly.
+  - Added i5/OS release to debug log
+  - BETA2: Added patches from Thomas Raddatz to parser_switch code.
+  - BETA3: Added routines for validating SSL certificates
+        procedures: https_idname, https_strict
+       exit points: HTTP_POINT_CERT_VAL, HTTP_POINT_GSKIT_CERT_VAL
+  - BETA3: Added EXAMPLE22 to demonstrate https_strict() and
+             HTTP_POINT_CERT_VAL
+  - BETA3: Added EXAMPLE23 to demonstrate HTTP_POINT_GSKIT_CERT_VAL
+  - BETA4: Added "getter" routines from Thomas Raddatz to retrieve
+             info about the parser_switch values.
+  - BETA5: Header_Get_Req_Cookies code "%scan('?':path) - 1" causes
+             MCH1210 on old V4Rx systems due to a bug in the RPG
+             compiler. Moved subtraction to separate line to
+             work around the problem.
+
+Changes to version 1.21 from 1.20
+  - Added proxy tunnelling support (so SSL works via proxy)
+  - Cleaned up some unnecessary procedure pointer logic in HTTPAPIR4
+  - HTTP_BWSEND error was getting error message from C runtime
+     instead of from GSKit. Ooops!  (fix from Loek Maartens)
+  - PRE2: CommSSL_read() was mishanding Len=0 receives
+  - PRE2: Fixed up some iconv() settings.
+  - PRE2: Remove reliance on %char() to convert UCS2 to EBCDIC
+            in HTTPXMLR4.  (Apparently this didn't work on V5R1?)
+  - PRE2: Add ability to return full 64k data during XML parsing.
+            and ability to retrieve a pointer if you want even
+            larger data.
+  - PRE2: Fix bug in http_url_encoder_getstr() when data is
+            longer than 32k, routine would crash.  It now
+            truncates data at 32k.
+  - PRE2: Fix bug in https_init(), it would keep previous
+            DCM profile ID until actgrp reclaimed or https_cleanup
+            is called -- now if a new profile is supplied, it
+            will switch to that profile.
+  - PRE3: There was an extra CRLF sent in 'do_post', and I can't
+            see why this was done??  But it doesn't appear
+            to be needed, so I removed it.
+  - PRE4: Remove /IF DEFINED(*V5R2M0) from PRIVATE_H, as it was
+            breaking compatibility with V4R2 (sigh)
+  - PRE4: Re-write QSH/MKZIP and UPLOAD members for better perfomance
+            and to (hopefully?) fix compatibility w/V4R2
+  - PRE4: Fix bug where HTTP_xmlReturnPtr() was missing from
+            XMLSTUBR4, breaking compatiblity w/non-XML installs
+  - PRE5: Replace calls to %check() with the CHECK op-code for
+            V4R2 compatibility.
+  - PRE5: Add checks to HAVE_SRCSTMT_NODEBUGIO to some missing
+            spots for V4R2 compatibility.
+  - PRE6: Replace %OCCUR w/OCCUR op-code, replace %CHAR with
+            %EDITC for V4R2 compatibility.
+  - PRE7: Replace @__errno with sys_errno for globalization
+             and use get_symbols() routine to get symbol
+             data for URL encoding.
+  - PRE8: Changed lengths of 'value' field in 'Incoming'
+             procedures for XML parsing in EXAMPLExx to 65535
+  - PRE8: Added http_stripCRLF() routine to enable/disable the
+            stripping of CRLF chars when parsing XML
+  - PRE8: Added lots of DNS resolver diagnostics to COMMTCPR4
+            since DNS issues are becoming the #1 FAQ.
+  - POST1: 11/6/07 Add stub for HTTP_xmlStripCRLF
+
+Changes to version 1.20 from 1.19
+  - COMMSSLR4 will now ignore errors about being unable
+    to use CEE4RAGE in default activation group
+  - Fix to 1.18PRE5 caused content-length to be broken when
+     using http_url_post_raw2() or any of the routines that
+     relied on it (post_stmf, post_stmf_xml)
+
+Changes to version 1.19 from 1.18
+  - Add config option to use *LIBL to find HTTPAPI at runtime
+    (only changes *BNDDIR object -- very minor change!)
+  - Updated Expat to include fixes to Expat bug #1690883
+    (unbound prefix error in namespace parsing)
+
+Changes to version 1.18 from 1.17
+  - Move FD_ZERO, FD_SET and FD_ISSET to COMMTCPR4 where they
+       belong.
+  - Remove SOCKUTILR4 and SOCKUTIL_H from the distro.  If needed
+       for other projects, they're still available in the socket
+       tutorial   http://www.scottklement.com/rpg/socktut/
+  - Fix http_parse_xml_stmf() return values. For some reason,
+       it was returning the length of the last chunk of the
+       stream file!
+  - Add HTTP_get_xmltf, HTTP_post_xmltf, HTTP_post_stmf_xmltf
+       routines that download to a stream file prior to parsing
+       with Expat. Since they use two discrete steps, they
+       should theoretically be easier to debug.
+  - Make many of the *NOPASS parameters be *OMIT as well,
+       to simplify calling an API where the later parms are
+       needed, but the earlier ones aren't.
+  - Ignore "invalid ID" errors in COMMSSL when trying to
+       set PASSTHRU for the server auth type.  This option
+       is only available in V5R2 and prior releases with
+       a PTF, but it's relatively safe to ignore if the
+       option ID doesn't exist.
+  - Add support for Proxies contributed by Sebastian Schmidt
+       in his message to the mailing list at the following link:
+       www.scottklement.com/archives/ftpapi/200702/msg00038.html
+  - Added teraspace feature to HTTPUTILR4 to allow very large
+       spaces in xlatedyn(). Disabled for now due to compatibility
+       problems in Expat.
+  - PRE2: Fix bug in Proxy Support -- dsProxyPort was never initialized
+       so any time you used HTTPAPI without calling http_setProxy()
+       it would crash.
+  - PRE2: Prototypes in HTTPXMLR4 didn't match those in XMLSTUBR4
+       in 1.18pre1.  Fixed this bug.
+  - PRE3: CommSSL_Connect() was attempting to SSL handshake even
+       when the socket had already failed to connect.  This resulted
+       in the error message "The socket descriptor specified within
+       the gsk_handle was not valid" instead of a more reasonable
+       "Connection to server timed out" error message.
+  - PRE4: Added http_xmlns() for namespace support.
+  - PRE5: Moved deprecated stuff to COMPATR4 to make it
+       easier to find code in HTTPAPIR4
+  - PRE5: Change EXAMPLE2 to understand 302 redirects
+  - PRE5: Fix content-length to be length AFTER data is
+       translated.  (Was breaking POST of Unicode data)
+  - PRE6: Tried to fix up error handling in HTTPXMLR4 so that
+       network errors take priority over XML errors,
+       so users don't report an XML parsing error when
+       a web site returned '404 Not found', for example.
+
+Changes to version 1.17 from 1.16
+  - Added EXAMPLE20 to demonstrate how to provide SOAPAction
+       strings longer than 64 chars.
+  - Added new procedures to CCSIDR4 to do translation to a
+       dynamically allocated output buffer. These routines
+       calculate the buffer size during the translation to
+       ensure that all data fits.
+  - Changed SendDoc() to use the dynamic translation, to fix
+       bug reports where UTF-8 documents were truncated.
+  - Changed HTTP_setCCSIDs() to only affect the POST data
+       unless additional parameters are passed. This way, you
+       can set the CCSID the server requires for your POST data
+       without interfering with the actual HTTP protoocl.
+  - Upgraded Expat to version 2.0.0.
+  - Upgraded Expat to use UTF-16 output.
+  - Change HTTPXMLR4 to expect UTF-16 from Expat, and to
+       to use RPG's support for UTF-16 (instead of iconv)
+  - Added HTTP_PARSE_XML_STMF() to let you parse XML from
+       a stream file instead of reading it off an HTTP download.
+  - Added HTTP_tempfile() to generate a temporary filename
+  - Replaced (ugly, convoluted) EXAMPLE16 with the UPS Tracking
+       subfile example from Scott's COMMON presentation.
+  - Update EXAMPLE15 to change name to SystemiNetwork.com
+       and use their new RSS feed software.  Made EXAMPLE15
+       into a demonstration of the new HTTP_PARSE_XML_STMF API
+
+Changes to version 1.16 from 1.15
+  - In some circumstances, we're getting a response in RecvResp
+       starting with CRLF. Added code to look for that and skip
+       over it.
+  - Change default for Cookie processing to *ON.
+
+Changes to version 1.15 from 1.14
+  - Ask user for the name of the library to compile from
+       and install into.
+  - Increase the default timeout to 60 seconds
+  - Change HTTP_ASCII back to 819, since 367 fails to work in
+       some locales.
+
+Changes to version 1.14 from 1.13:
+  - Allow the userid/password to be set in the URL.
+  - Fixed problem that was corrupting the error messages relayed from
+    server to user.
+  - Fixed bug in http_url_post_stmf_xml() where the wrong parms
+    were being passed to the http_url_post_raw2() subprocedure
+    (bug report from Neville Oakley)
+  - Added routines for parsing HTTP headers and storing them
+    in memory accessible to applications via the http_header() API.
+    added HEADERR4 and HEADER_H members (for this purpose)
+  - Added support for loading cookies from the HTTP headers and
+    sending them back to the server (when appropriate)
+  - Added support for relative URLs (as long as at least one URL
+    has been parsed, previously)
+  - Remove hardcoded LIBHTTP references from code.  HTTPAPI
+    now uses *LIBL to find /copy members.
+
+Changes to version 1.13 from 1.12:
+  - Allow response chains to be up to 32k in length (previously,
+    2k was all we could handle)
+  - Add new exit point HTTP_POINT_PARSE_HDR_LONG to allow a
+    callback to receive the longer header size.  (The old callback
+    still uses 2k for backward compatibility)
+  - Add an additional "UserData" parameter to every XProc callback
+    so that global variables aren't required.
+  - We were using CCSID 819 for the HTTP protocol, but technically
+    it's supposed to be US-ASCII which is CCSID 367.
+  - Add separate routine for XML translation so that it always
+    uses CCSIDs for XML and uses UTF-8 by default (instead of
+    US-ASCII)
+  - Added HTTP_xml_setCCSIDs() routine to allow the user to
+    override the CCSIDs used for XML translation.
+  - Fixed bug where not all members were exported to the
+    XML installer.
+
+Changes to version 1.12 from 1.11:
+  - Turn off blocking after a blocking-style connection so that
+    the rest of the system will time-out properly.
+
+Changes to version 1.11 from 1.10:
+  - Added additional SSL certificate information to debug file
+  - Fixed some library issues in the installer program.
+  - Upgraded <eXpat/> to version 1.95.8
+  - Add the port # to the HOST: header in the request chain
+       when the port number is not 80.
+  - Move response chain parsing to it's own subprocedure and
+       call it from everywhere so that responses like 401
+       and 302 are checked consistently.
+  - Fix missing documentation for peUserAgent in the HTTPAPI_H
+       copybook.
+  - Fix # of parms checking in http_url_xxx_xml() routines.
+  - Allow *BLANKS for the Application ID in https_init(). When
+       *BLANKS is passed, it will use the default settings in
+       the *SYSTEM certificate store.
+  - If an https:// URL is requested, but https_init() has not
+       been called, call https_init(*Blanks) automagically.
+  - Remove scripts for building/distributing Expat, as that's
+       now to be considered a separate project.
+  - Change conditional compilation in COMMSSLR4 to make it
+       compatible with V4R5 GSKit
+  - Replace %scan(x'XX') with variables for the argument, since
+       apparently this doesn't work on some systems?!
+  - Added new module CCSIDR4 for ASCII/EBCDIC translation. Made
+       compile options to switch between CCSID & *TBL translation,
+       made subprocedures to change translation tables at runtime,
+       changed all of HTTPAPI to use these tables.
+  - Made the File CCSID changable at runtime, and make it use a
+       CCSID on V5R1 or later, and a CODEPAGE on V4R5 or earlier
+  - Remove the access() checks to see if user has permission. Rely
+       on errors from open() API, instead.
+  - Allow override of the 100-continue timeout length at runtime
+       by calling HTTP_set_100_timeout()
+
+Changes to version 1.10 from 1.9:
+  - recvdoc() was using 0 as a special value to mean that the
+       "content-length" keyword was not passed, and therefore we
+       have to calculate it based on what we receive.  However, in
+       some circumstances IIS will send "content-length: 0".  This
+       causing recvdoc() to sit and wait for a timeout rather than
+       returning immediately.
+  - Likewise, fixed senddoc() to handle a 0-length post data.
+  - Added HTTP_url_encoder_new(), http_url_encoder_addvar(),
+       HTTP_url_encoder_getptr(), HTTP_url_encoder_getstr(),
+       HTTP_url_encoder_free() routines.  These allow you to
+       URL encode data in the manner typically done when uploading
+       a web form via a web browser.
+  - Increased the size of the "path" portion of the URL from
+       256 bytes to 32767 bytes.  Changed it to a VARYING data
+       type, since %trim() on a 32k field is really awful.
+  - Marked the 256-byte URL routines as DEPRECATED.  Existing code
+       will call the deprecated routines for backward-compatibility
+       until they have been re-bound.  Care should be taken that
+       programs using the 256 byte routines are not re-bound without
+       being recompiled at the same time -- since rebinding would
+       pick up the new routines without using the new prototypes.
+  - Fixed bug where www-authenticate headers were not being checked
+       in do_post()
+  - Broke HTTPAPI up into modules. (HTTPAPIR4 was getting too big
+       to manage.) Modules are HTTPAPIR4 (main), HTTPUTILR4 (misc
+       utility routines), ENCODERR4 (data encoding), COMMTCPR4
+       (TCP communications), COMMSSLR4 (SSL communications)
+       This involved some very serious changes to the architecture,
+       so please test this release well!!
+  - At the same time as breaking into modules, I disabled the
+       ability to externally call many of the routines.  They
+       will fail with error HTTP_NOTSUPP.  I don't think anyone
+       calls them, anyway...  (famous last words!)
+  - Added http_url_post_raw2() to allow raw posts without using
+       a fixed-length memory buffer and without automatically
+       translation from EBCDIC->ASCII
+  - Added http_url_post_stmf to make it easy to post data from
+       a stream file to a web server
+  - Added a port of the eXpat XML parser to HTTPAPI's distro
+  - Added http_url_get_xml() to simplify parsing an XML response
+       (requires eXpat)
+  - Added http_url_post_xml() to simplify parsing an XML response
+       to a POST request (requires eXpat)
+  - Added http_url_post_stmf_xml() to simplify parsing an XML response
+       to a POST STMF request (requires eXpat)
+  - Added EXAMPLE14 to demonstrate using Amazon's XML web
+       services.
+  - Added EXAMPLE15 to demonstrate downloading news headlines
+       from the iSeries Network
+  - Added EXAMPLE16 to demonstrate tracking a package with UPS
+       and interpreting the results
+  - PRE5: Added Persistent HTTP support via the http_persist_xxxx()
+       subprocedures.
+  - PRE5: Added support for flat-numeric addresses, such as
+       http://3232236804/index.html
+  - PRE6: Added multipart/form-data encoding functions
+       http_mfd_encoder_open, http_mfd_encoder_addvar,
+       http_mfd_encoder_addvar_s, http_mfd_encoder_addstmf,
+       http_mfd_encoder_close.
+  - PRE6: Fixed bug in CommTcp_Resolve() where port number
+       override was ignored.
+  - PRE7: Timeout semantics in RecvResp() had changed between
+       1.9 and 1.10.  Added code to make them compatible.
+
+Changes to version 1.9 from 1.8:
+  - Added HTTP_xproc() to allow user to specify their own
+       exit procedures for some functions
+  - Added code for exit points for upload status, download status,
+       header parsing, sending additional headers, and overriding
+       the debug_write() procedure.
+  - Translate the service name from the URL to lowercase in
+       http_parseURL().
+  - Changed recvresp() and ssl_recvresp() to allow fractional
+       timeouts.  Changed the wait for the 100 response in do_post
+       to 0.5 second instead of 2 seconds.
+  - Changed the default content-type to text/xml since that's
+       what most people seem to be using it for.
+  - Changed installation program to present the license, and ask
+       user if he/she wants SSL and sample programs.  Only build
+       SSL-related sample programs if SSL is enabled.
+  - Changed XML installer to call INSTALL instead of building
+       sample programs itself (so that SSL-related samples are
+       only build when appropriate, etc)
+  - Changed sample programs to reference "scottklement.com"
+  - Removed memory leak when wwConnTo not deallocated
+  - Added code to force GSKit cleanup when activation group
+       is unloaded.
+  - Fixed bug in http_dcm_reg where appid wasn't left-trimmed
+  - Changed http_dcm_reg to register as a client-app if we are
+       running V5R1 or later
+  - Change ssl_error to give a human-readable message if V5R1
+       or later, changed GSKSSL_H accordingly.
+  - Add some extra config variables for V4R2 compatibility,
+       and change CONFIGR4 to populate them
+  - Print the SSL protocol used in the debugging log
+  - Allow user to change the SSL versions that are negotiated
+       by passing parameters to https_init()
+  - Created PACKAGE and MKZIP members to assist Scott in building
+       the appropriate objects for making releases
+  - Made CONFIGR4 and EXAMPLE11 V4R2 friendly.
+  - Added HTTP_redir_loc() to get location returned when web server
+       sends a 'Location:' in the header.
+  - Added EXAMPLE13 to demonstrate HTTP_redir_loc()
+
+Changes to version 1.8 from 1.7:
+  - Added lots of debugging stuff.  See CONFIG_H to enable it
+  - Change recvdoc & ssl_recvdoc to add messages you can retrieve
+       with http_error() to indicate any timeouts, etc.
+  - Fix bug in recvchunk & ssl_recvchunk (hopefully!) where we
+       werent reading a CRLF after every chunk
+  - Completely rewrote ssl_recvdoc() to do the select() prior to
+       the gsk_secure_soc_read().  Hopefully this will fix the
+       random GSK_ERROR_IO that seems to pop-up when using ssl_recvdoc
+  - Changed do_post, do_get to return message bodies for all HTTP
+       responses except 204, 304 and 1xx.
+  - Changed do_post/do_get to parse out the content-length header
+       and changed recvdoc() and ssl_recvdoc() to use the content
+       length to determine when the message is complete, this allows
+       better error checking in recvdoc().
+  - Removed connection: close from do_post and do_get, since some
+       (Micro$oft) servers don't linger on close (even when we
+       specify connection: close!!) and therefore lose data.
+  - Added new parameter peSOAPAction to allow GET & POST to work with
+       SOAP providers. (contributed by Giuseppe Costagliola)
+  - Ignore extra "100-continue" responses from server, and ignore
+       the Connection:close when sent on a 100-continue from IIS/5.0
+
+Changes to version 1.7 from 1.6:
+  - Fixed bug which limited SendDoc() and ssl_SendDoc() to 32k bytes.
+      The limitation was in the QDCXLATE API, so I added a wrapper
+      procedure that calls it in a loop.
+
+Changes to version 1.6 from 1.5:
+  - Fixed ssl_senddoc, was using the unpopulated 'peSock' for the
+      select() call.  Changed it to use wkSocket.   This is a hack,
+      a non-global variable should be created to hold per-descriptor
+      info (throughout) but this will fix it for the nonce.
+
+Changes to version 1.5 from 1.4:
+  - Fixed www-authenticate parsing when using BASIC authentication
+      and not pre-setting the user/password fields.
+
+Changes to version 1.4 from 1.3:
+  - Fixed bug in 1.3 that broke non-SSL builds.
+  - Changed 'for' loop to 'dow' loop in base64_encode() because
+      it broke V4R3 compatibility.
+  - Added new EXAMPLE8 which demonstrates sending a larger
+      post data (such as an entire stream file)
+
+Changes to version 1.3 from 1.2:
+  Added support for WWW-Authenticate requests, this involved:
+  - Added HTTP_GetAuth and HTTP_SetAuth subprocedures
+  - Added md5, mkdigest, interpret_auth, and base64 routines
+     to aid in the calculation of basic & digest mode authentication
+  - Added new error codes to signal when authentication is needed
+
+Changes to version 1.2 from 1.1:
+  - Fixed a typo in GSKSSL_H where GSK_CLOSE_FAILED was defined
+    incorrectly.
+
+Changes to version 1.1 from 1.0:
+  - Fixed bug in error reporting

@@ -1,0 +1,284 @@
+/*-                                                                            +
+ * Copyright (c) 2001-2023 Scott C. Klement                                    +
+ * All rights reserved.                                                        +
+ *                                                                             +
+ * Redistribution and use in source and binary forms, with or without          +
+ * modification, are permitted provided that the following conditions          +
+ * are met:                                                                    +
+ * 1. Redistributions of source code must retain the above copyright           +
+ *    notice, this list of conditions and the following disclaimer.            +
+ * 2. Redistributions in binary form must reproduce the above copyright        +
+ *    notice, this list of conditions and the following disclaimer in the      +
+ *    documentation and/or other materials provided with the distribution.     +
+ *                                                                             +
+ * THIS SOFTWARE IS PROVIDED BY THE AUTHOR AND CONTRIBUTORS ''AS IS'' AND      +
+ * ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE       +
+ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE  +
+ * ARE DISCLAIMED.  IN NO EVENT SHALL THE AUTHOR OR CONTRIBUTORS BE LIABLE     +
+ * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL  +
+ * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS     +
+ * OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)       +
+ * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT  +
+ * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY   +
+ * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF      +
+ * SUCH DAMAGE.                                                                +
+ *                                                                             +
+ */                                                                            +
+
+PGM          PARM(&TGTRLS)
+             DCL        VAR(&INSTLIB) TYPE(*CHAR) LEN(10) +
+                          VALUE('LIBHTTP')
+             DCL        VAR(&WKLIB)   TYPE(*CHAR) LEN(10) +
+                          VALUE('SKLEMENT')
+             DCL        VAR(&SAVF) TYPE(*CHAR) LEN(1) VALUE('Y')
+             DCL        VAR(&XML) TYPE(*CHAR) LEN(1) VALUE('Y')
+             DCL        VAR(&EXPATLIB) TYPE(*CHAR) LEN(10) +
+                          VALUE('LIBEXPAT')
+             DCL        VAR(&TGTRLS) TYPE(*CHAR) LEN(10)
+
+   /* DELETE THE MAIN SERVICE PROGRAMS */
+
+             DLTSRVPGM  SRVPGM(&INSTLIB/HTTPAPIR4)
+             MONMSG CPF2105
+             DLTSRVPGM  SRVPGM(&INSTLIB/SOCKUTILR4)
+             MONMSG CPF2105
+             DLTSRVPGM  SRVPGM(&INSTLIB/EXPAT)
+             MONMSG CPF2105
+             DLTBNDDIR  BNDDIR(&INSTLIB/HTTPAPI)
+             MONMSG CPF2105
+             DLTBNDDIR  BNDDIR(&INSTLIB/EXPAT)
+             MONMSG CPF2105
+
+   /* DELETE SAMPLE PROGRAMS */
+
+             DLTPGM     PGM(&INSTLIB/EXAMPLE1)
+             MONMSG CPF2105
+             DLTPGM     PGM(&INSTLIB/EXAMPLE2)
+             MONMSG CPF2105
+             DLTPGM     PGM(&INSTLIB/EXAMPLE3)
+             MONMSG CPF2105
+             DLTPGM     PGM(&INSTLIB/EXAMPLE4)
+             MONMSG CPF2105
+             DLTPGM     PGM(&INSTLIB/EXAMPLE5)
+             MONMSG CPF2105
+             DLTPGM     PGM(&INSTLIB/EXAMPLE6)
+             MONMSG CPF2105
+             DLTPGM     PGM(&INSTLIB/EXAMPLE7)
+             MONMSG CPF2105
+             DLTPGM     PGM(&INSTLIB/EXAMPLE8)
+             MONMSG CPF2105
+             DLTCMD     CMD(&INSTLIB/EXAMPLE9)
+             MONMSG CPF2105
+             DLTPGM     PGM(&INSTLIB/EXAMPLE9)
+             MONMSG CPF2105
+             DLTPGM     PGM(&INSTLIB/EXAMPLE10)
+             MONMSG CPF2105
+             DLTPGM     PGM(&INSTLIB/EXAMPLE11)
+             MONMSG CPF2105
+             DLTPGM     PGM(&INSTLIB/EXAMPLE12)
+             MONMSG CPF2105
+             DLTPGM     PGM(&INSTLIB/EXAMPLE13)
+             MONMSG CPF2105
+             DLTPGM     PGM(&INSTLIB/EXAMPLE14)
+             MONMSG CPF2105
+             DLTPGM     PGM(&INSTLIB/EXAMPLE15)
+             MONMSG CPF2105
+             DLTPGM     PGM(&INSTLIB/EXAMPLE16)
+             MONMSG CPF2105
+             DLTF       FILE(&INSTLIB/EXAMPLE14S)
+             MONMSG CPF2105
+             DLTPGM     PGM(&INSTLIB/EXAMPLE17)
+             MONMSG CPF2105
+             DLTPGM     PGM(&INSTLIB/EXAMPLE18)
+             MONMSG CPF2105
+             DLTPGM     PGM(&INSTLIB/EXAMPLE19)
+             MONMSG CPF2105
+             DLTPGM     PGM(&INSTLIB/EXAMPLE20)
+             MONMSG CPF2105
+             DLTPGM     PGM(&INSTLIB/EXAMPLE21)
+             MONMSG CPF2105
+             DLTPGM     PGM(&INSTLIB/EXAMPLE22)
+             MONMSG CPF2105
+             DLTPGM     PGM(&INSTLIB/EXAMPLE23)
+             MONMSG CPF2105
+             DLTPGM     PGM(&INSTLIB/EXAMPLE24)
+             MONMSG CPF2105
+             DLTPGM     PGM(&INSTLIB/EXAMPLE25)
+             MONMSG CPF2105
+             DLTPGM     PGM(&INSTLIB/EXAMPLE26)
+             MONMSG CPF2105
+             DLTPGM     PGM(&INSTLIB/EXAMPLE27)
+             MONMSG CPF2105
+             DLTPGM     PGM(&INSTLIB/EXAMPLE28)
+             MONMSG CPF2105
+             DLTPGM     PGM(&INSTLIB/EXAMPLE35)
+             MONMSG CPF2105
+             DLTPGM     PGM(&INSTLIB/EXAMPLE36)
+             MONMSG CPF2105
+             DLTPGM     PGM(&INSTLIB/EXAMPLE37)
+             MONMSG CPF2105
+             DLTPGM     PGM(&INSTLIB/EXAMPLE38)
+             MONMSG CPF2105
+             DLTPGM     PGM(&INSTLIB/EXAMPLE40)
+             MONMSG CPF2105
+             DLTPGM     PGM(&INSTLIB/EXAMPLE41)
+             MONMSG CPF2105
+
+   /* DELETE INSTALLER PROGRAMS */
+
+             DLTPGM     PGM(&INSTLIB/INSTALL)
+             MONMSG CPF2105
+             DLTPGM     PGM(&INSTLIB/INSTALLR4)
+             MONMSG CPF2105
+             DLTPGM     PGM(&INSTLIB/CONFIGR4)
+             MONMSG CPF2105
+             DLTPGM     PGM(&INSTLIB/MKEXPATCL)
+             MONMSG CPF2105
+             DLTF       FILE(&INSTLIB/CONFIGS)
+             MONMSG CPF2105
+
+   /* DELETE QSHELL INTERFACE */
+
+             DLTPGM     PGM(&INSTLIB/HTTPQSHR4)
+             MONMSG CPF2105
+
+   /* DELETE CMD INTERFACE */
+
+             DLTCMD     CMD(&INSTLIB/HTTPAPI)
+             MONMSG CPF2105
+             DLTPNLGRP  PNLGRP(&INSTLIB/HTTPAPI)
+             MONMSG CPF2105
+             DLTPGM     PGM(&INSTLIB/HTTPCMDR4)
+             MONMSG CPF2105
+
+
+   /* DELETE PACKAGING PROGRAMS IF THEY EXIST */
+
+             DLTPGM     PGM(&INSTLIB/PACKAGE)
+             MONMSG CPF2105
+
+
+   /* THIS IS GENERATED BY THE COMPILER TO RETURN ERROR INFO +
+      TO CODE/WDSC/RDI -- WE DON'T WANT TO DISTRIBUTE IT! */
+
+             DLTF       FILE(&INSTLIB/EVFEVENT)
+             MONMSG CPF2105
+
+
+   /* DELETE OUR WORK FILE */
+             DLTF       FILE(&INSTLIB/WORK)
+             MONMSG CPF2105
+
+
+   /* WIPE OUT EXPAT STUFF SO THAT IT'S IMPORTED CLEANLY */
+
+             RMVM FILE(&INSTLIB/EXPAT) MBR(*ALL)
+             MONMSG MSGID(CPF7303 CPF7301 CPF7310)
+
+             RMVM FILE(&INSTLIB/QRPGLESRC) MBR(EXPAT_H)
+             MONMSG MSGID(CPF7303 CPF7301 CPF7310)
+             RMVM FILE(&INSTLIB/QSRVSRC) MBR(EXPAT)
+             MONMSG MSGID(CPF7303 CPF7301 CPF7310)
+             RMVM FILE(&INSTLIB/QCLSRC) MBR(MKEXPATCL)
+             MONMSG MSGID(CPF7303 CPF7301 CPF7310)
+
+
+   /* IMPORT EXPAT SOURCE CODE FROM LIBEXPAT */
+
+             CPYF FROMFILE(&EXPATLIB/EXPAT) +
+                   TOFILE(&INSTLIB/EXPAT) +
+                   FROMMBR(*ALL) +
+                   TOMBR(*FROMMBR) +
+                   MBROPT(*ADD)
+
+             CPYF FROMFILE(&EXPATLIB/QRPGLESRC) +
+                   TOFILE(&INSTLIB/QRPGLESRC) +
+                   FROMMBR(EXPAT_H) +
+                   TOMBR(*FROMMBR) +
+                   MBROPT(*ADD)
+
+             CPYF FROMFILE(&EXPATLIB/QSRVSRC) +
+                   TOFILE(&INSTLIB/QSRVSRC) +
+                   FROMMBR(EXPAT) +
+                   TOMBR(*FROMMBR) +
+                   MBROPT(*ADD)
+
+             CPYF FROMFILE(&EXPATLIB/QCLSRC) +
+                   TOFILE(&INSTLIB/QCLSRC) +
+                   FROMMBR(MKEXPATCL) +
+                   TOMBR(*FROMMBR) +
+                   MBROPT(*ADD)
+
+
+   /* SAVE TO SAVE FILE IF IT EXISTS IN &WKLIB */
+
+             CHKOBJ OBJ(&WKLIB/HTTPAPI) OBJTYPE(*FILE)
+             MONMSG MSGID(CPF9801 CPF9810) EXEC(DO)
+                CHGVAR VAR(&SAVF) VALUE('N')
+             ENDDO
+
+             IF (&SAVF = 'Y') DO
+                 CLRSAVF FILE(&WKLIB/HTTPAPI)
+                 SAVLIB LIB(&INSTLIB) DEV(*SAVF) SAVF(&WKLIB/HTTPAPI) +
+                          TGTRLS(&TGTRLS) DTACPR(*YES)
+                 DSPSAVF FILE(&WKLIB/HTTPAPI)
+             ENDDO
+
+
+   /* IF WE CREATED A SAVE FILE, TRY TO ALSO GENERATE XML */
+
+
+             CHGVAR VAR(&XML) VALUE(&SAVF)
+             GOTO SKIPXML
+
+             CHKOBJ OBJ(&INSTLIB/QXMLGENS) OBJTYPE(*FILE)
+             MONMSG MSGID(CPF9801 CPF9810) EXEC(DO)
+                CHGVAR VAR(&XML) VALUE('N')
+             ENDDO
+             CHKOBJ OBJ(&WKLIB/QXML) OBJTYPE(*FILE)
+             MONMSG MSGID(CPF9801 CPF9810) EXEC(DO)
+                CHGVAR VAR(&XML) VALUE('N')
+             ENDDO
+             CHKOBJ OBJ(XMLGEN/XMLGEN) OBJTYPE(*CMD)
+             MONMSG MSGID(CPF9801 CPF9810) EXEC(DO)
+                CHGVAR VAR(&XML) VALUE('N')
+             ENDDO
+
+             IF (&XML = 'Y') DO
+              /* XMLGEN/XMLGEN XMLSCRIPT(HTTPAPI) +
+                             SCRIPTSRCF(&INSTLIB/QXMLGENS) +
+                             SRCTOFILE(&WKLIB/QXML) ENCODING('UTF-8') +
+                             AUTHOR('Scott Klement') */
+             ENDDO
+
+SKIPXML:
+
+
+   /* IF WE GENERATED XML, ALSO GENERATE A .ZIP FILE */
+
+             IF (&XML = 'Y') DO
+                 CRTPF FILE(&INSTLIB/WORK) RCDLEN(256)
+                 SNDPGMMSG  MSGID(CPF9897) MSGF(QCPFMSG) +
+                              MSGDTA('Creating ZIP file +
+                              /home/sklement/httpapi.zip...') +
+                              TOPGMQ(*EXT) MSGTYPE(*STATUS)
+                 ADDENVVAR  ENVVAR(QIBM_QSH_CMD_OUTPUT) +
+                            VALUE('FILE=/tmp/package.log') +
+                            REPLACE(*YES)
+                 ADDENVVAR  ENVVAR(QIBM_QSH_CMD_ESCAPE_MSG) VALUE(Y) +
+                            REPLACE(*YES)
+                 STRQSH CMD('/qsys.lib/libhttp.lib/qsh.file/mkzip.mbr')
+                 RMVENVVAR  ENVVAR(QIBM_QSH_CMD_OUTPUT)
+                 RMVENVVAR  ENVVAR(QIBM_QSH_CMD_ESCAPE_MSG)
+                 DLTF FILE(&INSTLIB/WORK)
+             ENDDO
+
+
+   /* RE-BUILD HTTPAPI OBJECTS */
+
+             CRTCLPGM PGM(INSTALL) SRCFILE(&INSTLIB/QCLSRC)
+             CALL PGM(INSTALL)
+
+
+ENDPGM
+

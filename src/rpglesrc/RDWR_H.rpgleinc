@@ -1,0 +1,163 @@
+     /*-                                                                            +
+      * Copyright (c) 2016-2023 Scott C. Klement                                    +
+      * All rights reserved.                                                        +
+      *                                                                             +
+      * Redistribution and use in source and binary forms, with or without          +
+      * modification, are permitted provided that the following conditions          +
+      * are met:                                                                    +
+      * 1. Redistributions of source code must retain the above copyright           +
+      *    notice, this list of conditions and the following disclaimer.            +
+      * 2. Redistributions in binary form must reproduce the above copyright        +
+      *    notice, this list of conditions and the following disclaimer in the      +
+      *    documentation and/or other materials provided with the distribution.     +
+      *                                                                             +
+      * THIS SOFTWARE IS PROVIDED BY THE AUTHOR AND CONTRIBUTORS ''AS IS'' AND      +
+      * ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE       +
+      * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE  +
+      * ARE DISCLAIMED.  IN NO EVENT SHALL THE AUTHOR OR CONTRIBUTORS BE LIABLE     +
+      * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL  +
+      * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS     +
+      * OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)       +
+      * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT  +
+      * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY   +
+      * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF      +
+      * SUCH DAMAGE.                                                                +
+      *                                                                             +
+      */                                                                            +
+
+      /if defined(RDWR_H_DEFINED)
+      /eof
+      /endif
+      /define RDWR_H_DEFINED
+
+      *
+      *  This defines the interface needed to be be a reader
+      *  or writer.
+      *
+      *   reader = HTTPAPI will call these routines to load
+      *            data to be sent via HTTP
+      *
+      *   writer = HTTPAPI will call these routines to save
+      *            data that was received via HTTP
+      *
+      *  An initialize routine for your reader/writer will be
+      *  called by the user as part of a call to the HTTP() API
+      *
+      *  HTTP( 'PUT'
+      *      : 'http://some-url'
+      *      : YourWriter(parm: parm)
+      *      : YourReader(parm: parm: parm)
+      *      );
+      *
+      *  In the above example, YourWriter is the initializer
+      *  for a writer, and YourReader is the intiializer for
+      *  a reader.
+      *
+      *  All Initializers must return a RDWR_HANDLE, which is
+      *  a pointer to a dynamically allocated copy of a RDWR
+      *  data structure (see below).
+      *
+      *  The initializer can include its own data by adding it
+      *  to the memory after the RDWR data below. It must allocate
+      *  enough memory for its own data to be added in the initializer
+      *  and set the length field accordingly.
+      *
+      *  Description of fields:
+      *      Length = Length of RDWR structure (including any
+      *               extra data added by the initializer routine)
+      *     Version = Version of RDWR interface. Currently must be
+      *               set to x'0101'
+      *  Directions = Directions allowed. Use flags RDWR_READER
+      *               and RDWR_WRITER to set the bits
+      *    NetCCSID = Initializer can set this to 0. HTTPAPI will
+      *               provide the network CCSID in this field
+      *    LocCCSID = Initializer can set this to 0. HTTPAPI will
+      *               provide the local CCSID in this field
+      *  MaxBufSize = Initializer can set this to 0. HTTPAPI will
+      *               provide the largest buffer size that it will
+      *               use for send/receives in this field.
+      *        Open = pointer to routine HTTPAPI will call to open
+      *               the reader/writer. (See XXX_Open prototypes)
+      *        Read = pointer to routine HTTPAPI will call to read
+      *               data if acting in the role of a reader.
+      *               (See Reader_Read prototype.)
+      *       Write = pointer to routine HTTPAPI will call to write
+      *               data if acting in the role of a writer.
+      *               (See Writer_Write prototype.)
+      *       Close = pointer to routine HTTPAPI will call to close
+      *               the stream when all data is received
+      *               (See the XXX_close prototypes.)
+      *     Cleanup = pointer to routine HTTPAPI will call when
+      *               done. Use this to free up the dynamic memory
+      *               reserved by the initializer.
+      *    SetError = pointer to SetError() routine to set the
+      *               HTTPAPI error code.  Pointer is set by HTTPAPI
+      *               before calling the xxx_open() routine.
+      *
+     D RDWR_READER     C                   x'10'
+     D RDWR_WRITER     C                   x'20'
+     D RDWR_HANDLE     S               *   inz(*null)
+
+     D RDWR_t          DS                  qualified
+     D                                     template
+     D   Length                      10u 0 inz(0)
+     D   Version                      2a   inz(x'0101')
+     D   Direction                    3u 0 inz(0)
+     D   NetCCSID                     5u 0 inz(0)
+     D   LocCCSID                     5u 0 inz(0)
+     D   MaxBufSize                  10u 0 inz(0)
+     D   Open                          *   procptr inz(*null)
+     D   Read                          *   procptr inz(*null)
+     D   Write                         *   procptr inz(*null)
+     D   Close                         *   procptr inz(*null)
+     D   Cleanup                       *   procptr inz(*null)
+     D   SetError                      *   procptr inz(*null)
+
+     D Reader          ds                  likeds(RDWR_t)
+     D                                     based(RDWR_Reader_p)
+
+     D Reader_Open     PR            10i 0 extproc(Writer.Open)
+     D   handle                            like(RDWR_HANDLE) value
+     D   direction                    3u 0 value
+     D   contentType              16384a   varying
+     D   contentLen                  10u 0
+
+     D Reader_Read     PR            10i 0 extproc(Reader.Read)
+     D   handle                            like(RDWR_HANDLE) value
+     D   Buf                           *   value
+     D   Size                        10u 0 value
+
+     D Reader_Close    PR                  extproc(Reader.Close)
+     D   handle                            like(RDWR_HANDLE) value
+
+     D Reader_Cleanup  PR                  extproc(Reader.Cleanup)
+     D   handle                            like(RDWR_HANDLE) value
+
+     D Reader_SetError...
+     D                 PR                  extproc(Reader.SetError)
+     D   errorNo                     10i 0 value
+     D   errorMsg                    80a   const
+
+     D Writer          ds                  likeds(RDWR_t)
+     D                                     based(RDWR_Writer_p)
+
+     D Writer_Open     PR            10i 0 extproc(Reader.Open)
+     D   handle                            like(RDWR_HANDLE) value
+     D   direction                    3u 0 value
+
+     D Writer_Write    PR            10i 0 extproc(Writer.Write)
+     D   handle                            like(RDWR_HANDLE) value
+     D   Buf                           *   value
+     D   Size                        10u 0 value
+
+     D Writer_Close    PR                  extproc(Writer.Close)
+     D   handle                            like(RDWR_HANDLE) value
+
+     D Writer_Cleanup  PR                  extproc(Writer.Cleanup)
+     D   handle                            like(RDWR_HANDLE) value
+
+     D Writer_SetError...
+     D                 PR                  extproc(Writer.SetError)
+     D   errorNo                     10i 0 value
+     D   errorMsg                    80a   const
+

@@ -1,0 +1,223 @@
+      /if defined(PRIVATE_H)
+      /eof
+      /endif
+      /define PRIVATE_H
+
+     D VARPREF         C                   CONST(2)
+
+     D base64_init     PR
+     D   peBase64                      *   value
+
+     D base64_encode   PR            10I 0
+     D   peInput                       *   value
+     D   peInputLen                  10I 0 value
+     D   peOutput                      *   value
+     D   peOutSize                   10I 0 value
+
+     D url_encode_pre  PR            10I 0
+     D    peEncoder                    *   value
+     D    peInput                      *   value
+     D    peInpLen                   10I 0 value
+
+     D url_encode      PR
+     D    peEncoder                    *   value
+     D    peInput                      *   value
+     D    peInpLen                   10I 0 value
+     D    peLoc                        *   value
+     D    peLocSize                  10I 0 value
+
+     D debug_setproc   PR
+     D   peProc                        *   procptr value
+     D   peUserData                    *   value
+
+     D md5             PR             1N
+     D   peData                        *   value
+     D   peDataLen                   10I 0 value
+     D   peDigest                    32A
+
+     D util_Diag       PR             1N
+     D   peMsgTxt                   256A   const
+
+     d SetError        PR
+     d   peErrorNo                   10I 0 value
+     d   peErrorMsg                  80A   const
+
+     d SetRespCode     PR
+     d   peErrorNo                   10I 0 value
+
+     d httpdate        PR            29A
+     d  peTS                           Z   const
+
+     D FILE_CCSID      PR            10I 0
+
+     D xml_xlate       PR            10I 0
+     D   peSize                      10I 0 value
+     D   peData                        *   value
+     D   peOutBuf                      *
+
+      ** utilities from COMMTCPR4 are that used by COMMSSLR4
+
+     D CommTcp_Resolve...
+     D                 PR              *
+     D   peHandle                      *   value
+     D   peHost                        *   value options(*string)
+     D   peService                     *   value options(*string)
+     D   pePort                      10I 0 value
+     D   peForced                     1N   const
+
+     D CommTcp_ConnectNonBlock...
+     D                 PR            10I 0
+     D   peSockaddr                    *   value
+     D   peTimeout                   10P 3 value
+     D   peTTL                       10i 0 const options(*nopass)
+
+     D CommTcp_FD_Set...
+     D                 PR
+     D   peFD                        10I 0
+     D   peFDSet                           like(fdset)
+
+     D CommTcp_FD_IsSet...
+     D                 PR             1N
+     D   peFD                        10I 0
+     D   peFDSet                           like(fdset)
+
+     D CommTcp_FD_Zero...
+     D                 PR
+     D   peFDSet                           like(fdset)
+
+     D fdset           s             28A   based(template)
+
+      ***  IBM-supplied functions  ***
+
+     D atoi            PR            10I 0 ExtProc('atoi')
+     D  string                         *   value options(*string)
+      /if defined(HAVE_INT64)
+     D atoll           PR            20I 0 ExtProc('atoll')
+     D  string                         *   value options(*string)
+      /else
+     D atoll           PR            10I 0 ExtProc('atoi')
+     D  string                         *   value options(*string)
+      /endif
+
+     D memcpy          PR              *   ExtProc('memcpy')
+     D   dst                           *   value
+     D   src                           *   value
+     D   length                      10U 0 value
+     D memchr          pr              *   extproc(*CWIDEN: 'memchr')
+     D   buf                           *   value
+     D   char                         1a   value
+     D   size                        10u 0 value
+
+      /if defined(USE_TS_MALLOC64)
+     D TS_malloc       PR              *   ExtProc('_C_TS_malloc64')
+     D   size                        20U 0 value
+      /else
+     D TS_malloc       PR              *   ExtProc('_C_TS_malloc')
+     D   size                        10U 0 value
+      /endif
+     D TS_realloc      PR              *   ExtProc('_C_TS_realloc')
+     D   ptr                           *   value
+     D   size                        10U 0 value
+     D TS_free         PR                  ExtProc('_C_TS_free')
+     D   ptr                           *   value
+
+     D xalloc          PR              *
+     D   size                        20p 0 value
+     D xdealloc        PR
+     D   ptr                           *
+     D xrealloc        PR              *
+     D   ptr                           *   value
+     D   size                        20p 0 value
+
+     D new_iconv       PR            52a
+     D   peFrom                      10i 0 value
+     D   peTo                        10i 0 value
+
+     D close_iconv     PR
+     D   This                        52a   value
+
+     D iconvdyn        PR            10I 0
+     D   peSize                      10I 0 value
+     D   peData                        *   value
+     D   peDesc                      52a
+     D   peOutbuf                      *
+
+     D get_symbols     PR            25a
+
+     D OS_Release      PR             6a
+
+      /if defined(HAVE_SSLAPI)
+     D commssl_setxproc...
+     D                 PR
+     D    pePoint                    10I 0 value
+     D    peProc                       *   procptr value
+     D    peUsrDta                     *   value
+      /endif
+
+     D QMHSNDPM        PR                  ExtPgm('QMHSNDPM')
+     D   MessageID                    7A   Const
+     D   QualMsgF                    20A   Const
+     D   MsgData                  32767A   const options(*varsize)
+     D   MsgDtaLen                   10I 0 Const
+     D   MsgType                     10A   Const
+     D   CallStkEnt                  10A   Const
+     D   CallStkCnt                  10I 0 Const
+     D   MessageKey                   4A
+     D   ErrorCode                32767A   options(*varsize)
+
+     D ApiEscape       DS
+     D  AE_Prov                      10i 0 inz(0)
+     D  AE_Avail                     10I 0 inz(0)
+
+     D getDebugLevel...
+     D                 PR            10i 0
+
+     D socket_status   PR
+     D   routine                     50a   varying const
+     D   point                       50a   varying const
+     D   fd                          10i 0 value
+
+     D select_status   PR
+     D   routine                     50a   varying const
+     D   point                       50a   varying const
+     D   fd                          10i 0 value
+     D   rset                          *   value
+     D   wset                          *   value
+     D   eset                          *   value
+     D   timeout                       *   value
+     D   rc                          10i 0 value options(*nopass)
+
+     D getGlobalPtr    PR              *
+
+     D global          ds                  qualified
+     D                                     based(p_global)
+     D   timeout                     10i 0
+     D   modTime                       Z
+     D   use_cookies                  1n
+     D   local_ccsid                 10i 0
+     D   net_ccsid                   10i 0
+     D   file_ccsid                  10i 0
+     D   file_mode                   10i 0
+     D   timeout100                  10i 0
+     D   debugLevel                  10i 0
+     D   contentType              16384a   varying
+     D   soapActSet                   1n
+     D   soapAction               32768a   varying
+     D   userAgent                16384a   varying
+     D   acceptHdr                 4096a   varying
+
+     D CEEDOD          PR
+     D   pos                         10i 0 const
+     D   desctype                    10i 0
+     D   datatype                    10i 0
+     D   descinf1                    10i 0
+     D   descinf2                    10i 0
+     D   datalen                     10i 0
+     D   fc                          12a   options(*omit)
+
+     D memStatus       PR
+     D   msg                         50a   varying const
+
+     D http_header_count...
+     D                 PR            10i 0
+

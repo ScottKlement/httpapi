@@ -1,0 +1,321 @@
+PGM PARM(&INSTLIB)
+
+    DCL VAR(&INSTLIB) TYPE(*CHAR) LEN(10)
+
+    DLTMSGF MSGF(&INSTLIB/HTTPAPI)
+    MONMSG  CPF2105
+
+    CRTMSGF MSGF(&INSTLIB/HTTPAPI) TEXT('HTTPAPI error messages')
+
+    ADDMSGD MSGID(HTA0001) MSGF(&INSTLIB/HTTPAPI) +
+            MSG('Invalid uniform resource locator (URL).') +
+            SECLVL('&N Cause . . . . . : +
+                    The URL you specified is not valid for use with +
+                    HTTPAPI. Reason code is &1. Here is an example +
+                    of what a URL might look like: &N +
+                    http://www.scottklement.com/blug/blah.html &N+
+                       Reasons . . . . : +
+                    &N 01 = Your URL was relative, and no protocol +
+                            or host has been established yet. +
+                    &N 02 = You specified a protocol other than +
+                            http: or https: +
+                    &N 03 = You specified https:, but SSL support +
+                            was not compiled in to HTTPAPI +
+                    &N 04 = URL does not contain a host name') +
+            FMT((*CHAR 2))
+
+    ADDMSGD MSGID(HTA0002) MSGF(&INSTLIB/HTTPAPI) +
+            MSG('Host not found.') +
+            SECLVL('&N Cause . . . . . : +
+                    The host name specified in your URL could not +
+                    be converted to an IP address. Here are some +
+                    things to check: +
+                    &N -- Was the host name spelled correctly? +
+                    &N -- Is your system configured to look up +
+                            host names in a DNS server? +
+                    &N -- Is the host name supposed to be in your +
+                            host table? (unlikely, unless it''s +
+                            your own HTTP server.) +
+                    &N -- Could your DNS server be down or +
+                            unavailable? +
+                    &N -- Could the remote HTTP server''s DNS server +
+                            be down or unavailable?')
+
+    ADDMSGD MSGID(HTA0003) MSGF(&INSTLIB/HTTPAPI) +
+            MSG('I/O error during SSL receive.') +
+            SECLVL('&N Cause . . . . . : +
+                    HTTPAPI attemped to receive data from the +
+                    remote host by calling the i5/OS gsk_secure+
+                    _soc_read() API and it failed with GSKIT +
+                    error: &1 errno &2 &3.') +
+            FMT((*DEC 10 0)(*DEC 10 0)(*CHAR 80))
+
+    ADDMSGD MSGID(HTA0004) MSGF(&INSTLIB/HTTPAPI) +
+            MSG('Unable to create socket') +
+            SECLVL('&N Cause . . . . . : +
+                    HTTPAPI attempted to create a TCP socket by +
+                    calling the socket() API provided by i5/OS, +
+                    but the operating system reported the following +
+                    error: &1 &2') +
+            FMT((*CHAR 7)(*CHAR 80))
+
+    ADDMSGD MSGID(HTA0006) MSGF(&INSTLIB/HTTPAPI) +
+            MSG('Error connecting to HTTP server.') +
+            SECLVL('&N Cause . . . . . : +
+                    HTTPAPI was unable to connect to the HTTP +
+                    server. The error code was &1 &2. +
+                    &N Notes . . . . . : +
+                    &N CPE3425 usually means that there is no HTTP +
+                    server running on the remote machine.  Perhaps +
+                    they forgot to start it?  Perhaps you''re +
+                    connecting to the wrong machine? +
+                    &N CPE3428 usuallg means that the server is +
+                    off-line, or that there''s a routing error.') +
+            FMT((*CHAR 7)(*CHAR 80))
+
+    ADDMSGD MSGID(HTA0007) MSGF(&INSTLIB/HTTPAPI) +
+            MSG('Timeout connecting to HTTP server.') +
+            SECLVL('&N Cause . . . . . : +
+                    HTTPAPI sent a request to connect to an +
+                    HTTP server, but did not receive a response +
+                    within &1 seconds. +
+                    &N Notes . . . . . : +
+                    &N Unless you are on a very slow network, +
+                    a connection request is usually established in +
+                    5 seconds or less.  If your timeout value (&1) +
+                    is higher than 5, then your connection is +
+                    probably being blocked by a firewall (95% of +
+                    the time a firewall is the cause) or you have +
+                    a network error (5% of the time)') +
+            FMT((*DEC 10 0))
+
+    ADDMSGD MSGID(HTA0013) MSGF(&INSTLIB/HTTPAPI) +
+            MSG('HTTP response was &1 &2.') +
+            SECLVL('&N Cause . . . . . : +
+                    HTTPAPI successfully communicated with the +
+                    HTTP server, but the server reported an +
+                    error code of &1 &2') +
+            FMT((*CHAR 3)(*CHAR 80))
+
+    ADDMSGD MSGID(HTA0016) MSGF(&INSTLIB/HTTPAPI) +
+            MSG('Error reported by save procedure.') +
+            SECLVL('&N Cause . . . . . : +
+                    HTTPAPI calls a subprocedure to save &1 bytes +
+                    of received data. However, the subprocedure that +
+                    saves the data returned &2 bytes saved. +
+                    Errno is currently &3.') +
+            FMT((*DEC 10 0)(*DEC 10 0)(*DEC 10 0))
+
+    ADDMSGD MSGID(HTA0020) MSGF(&INSTLIB/HTTPAPI) +
+            MSG('Unsupported transfer encoding value.') +
+            SECLVL('&N Cause . . . . . : +
+                    HTTPAPI supports the identity and chunked +
+                    transfer encodings, as documented in the HTTP/1.1 +
+                    standard.  However, the server requested the +
+                    &1 transfer-encoding, which is not supported +
+                    by HTTPAPI.') +
+            FMT((*CHAR 32))
+
+    ADDMSGD MSGID(HTA0022) MSGF(&INSTLIB/HTTPAPI) +
+            MSG('Error opening IFS stream file.') +
+            SECLVL('&N Cause . . . . . : +
+                    HTTPAPI attemped to open the &3 stream file +
+                    from the IFS. It failed with the following +
+                    error: &1 &2') +
+            FMT((*CHAR 7)(*CHAR 80)(*CHAR 256))
+
+    ADDMSGD MSGID(HTA0023) MSGF(&INSTLIB/HTTPAPI) +
+            MSG('Error setting application ID for SSL') +
+            SECLVL('&N Cause . . . . . : +
+                    HTTPAPI attemped to associate itself with the +
+                    i5/OS Digital Certificate Manager as application +
+                    ID &1.  This failed with GSKit error &2 +
+                    &3') +
+            FMT((*CHAR 100)(*DEC 10 0)(*CHAR 256))
+
+    ADDMSGD MSGID(HTA0024) MSGF(&INSTLIB/HTTPAPI) +
+            MSG('Error setting SSL auth type') +
+            SECLVL('&N Cause . . . . . : +
+                    HTTPAPI attemped to set the &1 auth type +
+                    to &2, but received GSKit error &3 &4') +
+            FMT((*CHAR 6)(*DEC 10 0)(*DEC 10 0)(*CHAR 256))
+
+    ADDMSGD MSGID(HTA0025) MSGF(&INSTLIB/HTTPAPI) +
+            MSG('GSkit environment is already initialized') +
+            SECLVL('&N Cause . . . . . : +
+                    HTTPAPI attemped to initialize the GSkit +
+                    environment, but was unable to, because the +
+                    environment was already initialized.') +
+            FMT(*NONE)
+
+    ADDMSGD MSGID(HTA0026) MSGF(&INSTLIB/HTTPAPI) +
+            MSG('Unable to open GSKit environment') +
+            SECLVL('&N Cause . . . . . : +
+                    HTTPAPI attemped to open the GSKit environment +
+                    but it failed with GSKit error &1 &2') +
+            FMT((*DEC 10 0)(*CHAR 256))
+
+    ADDMSGD MSGID(HTA0027) MSGF(&INSTLIB/HTTPAPI) +
+            MSG('Unable to set GSKit session type') +
+            SECLVL('&N Cause . . . . . : +
+                    HTTPAPI attemped to set the GSKit session type +
+                    but it failed with GSKit error &1 &2') +
+            FMT((*DEC 10 0)(*CHAR 256))
+
+    ADDMSGD MSGID(HTA0028) MSGF(&INSTLIB/HTTPAPI) +
+            MSG('Register app failed with &1') +
+            SECLVL('&N Cause . . . . . : +
+                    The https_dcm_reg() routine of HTTPAPI attempted +
+                    to register an application with the digital +
+                    certificate manager.  This failed with msgid +
+                    &1.') +
+            FMT((*CHAR 7))
+
+    ADDMSGD MSGID(HTA0029) MSGF(&INSTLIB/HTTPAPI) +
+            MSG('Unable to open SSL: &1') +
+            SECLVL('&N Cause . . . . . : +
+                    HTTPAPI called the gsk_sec_soc_open() API to +
+                    open a secure connection.  This failed with +
+                    GSKit error &2 &1.') +
+            FMT((*CHAR 256)(*DEC 10 0))
+
+    ADDMSGD MSGID(HTA0030) MSGF(&INSTLIB/HTTPAPI) +
+            MSG('Setting GSKit fd: &1') +
+            SECLVL('&N Cause . . . . . : +
+                    HTTPAPI attempted to associate fd &3 with the +
+                    SSL session.  This failed with +
+                    GSKit error &2 &1.') +
+            FMT((*CHAR 256)(*DEC 10 0)(*DEC 10 0))
+
+    ADDMSGD MSGID(HTA0031) MSGF(&INSTLIB/HTTPAPI) +
+            MSG('Setting GSKit timeout: &1') +
+            SECLVL('&N Cause . . . . . : +
+                    HTTPAPI attempted to set the GSK_HANDHAKE_TIMEOUT +
+                    property of the SSL socket. This failed with +
+                    GSKit error &2 &1.') +
+            FMT((*CHAR 256)(*DEC 10 0))
+
+    ADDMSGD MSGID(HTA0032) MSGF(&INSTLIB/HTTPAPI) +
+            MSG('SSL handshake timed out') +
+            SECLVL('&N Cause . . . . . : +
+                    HTTPAPI attempted to negotiate SSL settings +
+                    (i.e. a "handshake") with the HTTP server.  This +
+                    timed out.') +
+            FMT(*NONE)
+
+    ADDMSGD MSGID(HTA0035) MSGF(&INSTLIB/HTTPAPI) +
+            MSG('Not registered with Digital Certificate Manager') +
+            SECLVL('&N Cause . . . . . : +
+                    HTTPAPI attempted to associate with the Digital +
+                    Certificate Manager as application &1. The +
+                    system claims that this ID is not registered +
+                    with it.  You can use https_dcm_reg() to register +
+                    your application.') +
+            FMT((*CHAR 100))
+
+    ADDMSGD MSGID(HTA0036) MSGF(&INSTLIB/HTTPAPI) +
+            MSG('HTTP server requires authoritzation.') +
+            SECLVL('&N Cause . . . . . : +
+                    The HTTP server responded to HTTPAPI with a +
+                    401 "Authentication Required" response. +
+                    This means that you need to set a userid and +
+                    password by calling http_setauth() prior to +
+                    accessing this web page.') +
+            FMT(*NONE)
+
+    ADDMSGD MSGID(HTA0037) MSGF(&INSTLIB/HTTPAPI) +
+            MSG('Invalid HTTP authentication type.') +
+            SECLVL('&N Cause . . . . . : +
+                    You called the http_setauth() or http_proxy+
+                    _setauth() routine of HTTPAPI, but provided +
+                    an invalid authorization type.') +
+            FMT(*NONE)
+
+    ADDMSGD MSGID(HTA0038) MSGF(&INSTLIB/HTTPAPI) +
+            MSG('HTTP authentication data cannot contain a colon.') +
+            SECLVL('&N Cause . . . . . : +
+                    You called http_setauth() or http_proxy+
+                    _setauth() and provided a userid or password +
+                    that contained a colon.  This is not allowed +
+                    per the HTTP standards.') +
+            FMT(*NONE)
+
+    ADDMSGD MSGID(HTA0039) MSGF(&INSTLIB/HTTPAPI) +
+            MSG('Server did not request digest authentication.') +
+            SECLVL('&N Cause . . . . . : +
+                    You attempted to set a digest authentication +
+                    string, but the server did not request digest +
+                    authentication. The server request is required +
+                    in order to provide proper encryption.') +
+            FMT(*NONE)
+
+    ADDMSGD MSGID(HTA0043) MSGF(&INSTLIB/HTTPAPI) +
+            MSG('Timed out while receiving data.') +
+            SECLVL('&N Cause . . . . . : +
+                    HTTPAPI was attempting to receive data from +
+                    the remote host, but did not receive data within +
+                    a &1 second timeout period.') +
+            FMT((*DEC 10 3))
+
+    ADDMSGD MSGID(HTA0044) MSGF(&INSTLIB/HTTPAPI) +
+            MSG('Error during TCP receive.') +
+            SECLVL('&N Cause . . . . . : +
+                    HTTPAPI attemped to receive data from the +
+                    remote host by calling the i5/OS recv() API +
+                    and it failed with error: &1 &2.') +
+            FMT((*CHAR 7)(*CHAR 80))
+
+    ADDMSGD MSGID(HTA0045) MSGF(&INSTLIB/HTTPAPI) +
+            MSG('Error while waiting to receive') +
+            SECLVL('&N Cause . . . . . : +
+                    HTTPAPI was waiting for additional data to +
+                    arrive from the remote host by calling the +
+                    i5/OS select API. It failed with the following +
+                    error: &1 &2.') +
+            FMT((*CHAR 7)(*CHAR 80))
+
+    ADDMSGD MSGID(HTA0046) MSGF(&INSTLIB/HTTPAPI) +
+            MSG('Unexpected data in chunked transfer') +
+            SECLVL('&N Cause . . . . . : +
+                    HTTPAPI expected to receive a CRLF sequence +
+                    after a chunk of data sent with the chunked +
+                    transfer encoding, however, something else +
+                    was received instead.  This is a protocol +
+                    violation.') +
+            FMT(*NONE)
+
+    ADDMSGD MSGID(HTA0047) MSGF(&INSTLIB/HTTPAPI) +
+            MSG('Invalid exit point set with HTTP_xproc') +
+            SECLVL('&N Cause . . . . . : +
+                    HTTPAPI received an exit point ID number +
+                    of &1, which is not valid in this version +
+                    of HTTPAPI.') +
+            FMT((*DEC 10 0))
+
+    ADDMSGD MSGID(HTA0048) MSGF(&INSTLIB/HTTPAPI) +
+            MSG('Error retrieving SSL protocol version') +
+            SECLVL('&N Cause . . . . . : +
+                    HTTPAPI attempted to retrieve the SSL +
+                    protocol version, but failed with GSKit +
+                    error &2 &1.') +
+            FMT((*CHAR 256)(*DEC 10 0))
+
+    ADDMSGD MSGID(HTA0058) MSGF(&INSTLIB/HTTPAPI) +
+            MSG('Error during SSL receive.') +
+            SECLVL('&N Cause . . . . . : +
+                    HTTPAPI attemped to receive data from the +
+                    remote host by calling the i5/OS gsk_secure+
+                    _soc_read() API and it failed with GSKIT +
+                    error: &1 &2.') +
+            FMT((*DEC 10 0)(*CHAR 80))
+
+    ADDMSGD MSGID(HTA0059) MSGF(&INSTLIB/HTTPAPI) +
+            MSG('Error while waiting for SSL receive') +
+            SECLVL('&N Cause . . . . . : +
+                    HTTPAPI was waiting for additional SSL data to +
+                    arrive from the remote host by calling the +
+                    i5/OS select API. It failed with the following +
+                    error: &1 &2.') +
+            FMT((*CHAR 7)(*CHAR 80))
+
+ENDPGM

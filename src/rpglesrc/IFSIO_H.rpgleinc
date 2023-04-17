@@ -1,0 +1,762 @@
+     /*-                                                                            +
+      * Copyright (c) 2001-2023 Scott C. Klement                                    +
+      * All rights reserved.                                                        +
+      *                                                                             +
+      * Redistribution and use in source and binary forms, with or without          +
+      * modification, are permitted provided that the following conditions          +
+      * are met:                                                                    +
+      * 1. Redistributions of source code must retain the above copyright           +
+      *    notice, this list of conditions and the following disclaimer.            +
+      * 2. Redistributions in binary form must reproduce the above copyright        +
+      *    notice, this list of conditions and the following disclaimer in the      +
+      *    documentation and/or other materials provided with the distribution.     +
+      *                                                                             +
+      * THIS SOFTWARE IS PROVIDED BY THE AUTHOR AND CONTRIBUTORS ''AS IS'' AND      +
+      * ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE       +
+      * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE  +
+      * ARE DISCLAIMED.  IN NO EVENT SHALL THE AUTHOR OR CONTRIBUTORS BE LIABLE     +
+      * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL  +
+      * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS     +
+      * OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)       +
+      * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT  +
+      * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY   +
+      * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF      +
+      * SUCH DAMAGE.                                                                +
+      *                                                                             +
+      */                                                                            +
+
+      *  This header file contains the constants, structures and prototypes
+      *  for using the Integrated File System API
+      *
+      *  These APIs were designed originally for use in C programming.
+      *  Therefore bear in mind:
+      *   1) All strings must be null-terminated, and variable-length.
+      *        [ options(*string) will fix this for you ]
+      *   2) Errors are returned in the errno variable, and strings for
+      *         them are available by calling strerror()
+      *   3) In order to call errno or strerror, you must bind to the
+      *         QC2LE binding directory.  See ERRNO_H for the definitions
+      *         used to access errno.
+      *
+      *                                               SCK 03/24/1999
+
+      * CHG SCK 03/28/2001  Added options(*string) & /define directives
+      *            now that we're running a post-V4R2 system.
+
+      *
+      *  To use these in your source code, you need a D-spec like this:
+      *  D/COPY source-lib/QRPGLESRC,IFSIO_H
+
+      *  IBM's "UNIX-type APIs" manual explains how to use all of these
+      *      APIs in detail.  However, the manual assumes you're writing
+      *      your programs in C.
+
+      * This header file includes (in order)
+      *   1) Constants
+      *   2) Structures
+      *   3) Prototypes
+
+     D/if defined(IFSIO_H)
+     D/eof
+     D/endif
+
+     D/define IFSIO_H
+
+     D*                                         ascii code-page
+     D CP_DOSASCII     C                   437
+     D CP_ASCII        C                   819
+
+     D**********************************************************************
+     D*  Flags for use in open()
+     D*
+     D* More than one can be used -- add them together.
+     D**********************************************************************
+     D*                                            Reading Only
+     D O_RDONLY        C                   1
+     D*                                            Writing Only
+     D O_WRONLY        C                   2
+     D*                                            Reading & Writing
+     D O_RDWR          C                   4
+     D*                                            Create File if not exist
+     D O_CREAT         C                   8
+     D*                                            Exclusively create
+     D O_EXCL          C                   16
+     D*                                            Assign a CCSID
+     D O_CCSID         C                   32
+     D*                                            Truncate File to 0 bytes
+     D O_TRUNC         C                   64
+     D*                                            Append to File
+     D O_APPEND        C                   256
+     D*                                            Synchronous write
+     D O_SYNC          C                   1024
+     D*                                            Sync write, data only
+     D O_DSYNC         C                   2048
+     D*                                            Sync read
+     D O_RSYNC         C                   4096
+     D*                                            No controlling terminal
+     D O_NOCTTY        C                   32768
+     D*                                            Share with readers only
+     D O_SHARE_RDONLY  C                   65536
+     D*                                            Share with writers only
+     D O_SHARE_WRONLY  C                   131072
+     D*                                            Share with read & write
+     D O_SHARE_RDWR    C                   262144
+     D*                                            Share with nobody.
+     D O_SHARE_NONE    C                   524288
+     D*                                            Assign a code page
+     D O_CODEPAGE      C                   8388608
+     D*                                            Open in text-mode
+     D O_TEXTDATA      C                   16777216
+     D*                                            Allow text translation
+     D*                                            on newly created file.
+     D* Note: O_TEXT_CREAT requires all of the following flags to work:
+     D*           O_CREAT+O_TEXTDATA+(O_CODEPAGE or O_CCSID)
+     D O_TEXT_CREAT    C                   33554432
+     D*                                            Inherit mode from dir
+     D O_INHERITMODE   C                   134217728
+     D*                                            Large file access
+     D*                                            (for >2GB files)
+     D O_LARGEFILE     C                   536870912
+
+     D**********************************************************************
+     D* Access mode flags for access()
+     D*
+     D*   F_OK = File Exists
+     D*   R_OK = Read Access
+     D*   W_OK = Write Access
+     D*   X_OK = Execute or Search
+     D**********************************************************************
+     D F_OK            C                   0
+     D R_OK            C                   4
+     D W_OK            C                   2
+     D X_OK            C                   1
+
+     D**********************************************************************
+     D*      Mode Flags.
+     D*         basically, the mode parm of open(), creat(), chmod(),etc
+     D*         uses 9 least significant bits to determine the
+     D*         file's mode. (peoples access rights to the file)
+     D*
+     D*           user:       owner    group    other
+     D*           access:     R W X    R W X    R W X
+     D*           bit:        8 7 6    5 4 3    2 1 0
+     D*
+     D* (This is accomplished by adding the flags below to get the mode)
+     D**********************************************************************
+     D*                                         owner authority
+     D S_IRUSR         C                   256
+     D S_IWUSR         C                   128
+     D S_IXUSR         C                   64
+     D S_IRWXU         C                   448
+     D*                                         group authority
+     D S_IRGRP         C                   32
+     D S_IWGRP         C                   16
+     D S_IXGRP         C                   8
+     D S_IRWXG         C                   56
+     D*                                         other people
+     D S_IROTH         C                   4
+     D S_IWOTH         C                   2
+     D S_IXOTH         C                   1
+     D S_IRWXO         C                   7
+
+     D**********************************************************************
+     D* "whence" constants for use with lseek()
+     D**********************************************************************
+     D SEEK_SET        C                   CONST(0)
+     D SEEK_CUR        C                   CONST(1)
+     D SEEK_END        C                   CONST(2)
+
+
+     D**********************************************************************
+     D* File Information Structure (stat)
+     D*
+     D* struct stat {
+     D*  mode_t         st_mode;       /* File mode                       */
+     D*  ino_t          st_ino;        /* File serial number              */
+     D*  nlink_t        st_nlink;      /* Number of links                 */
+     D*  uid_t          st_uid;        /* User ID of the owner of file    */
+     D*  gid_t          st_gid;        /* Group ID of the group of file   */
+     D*  off_t          st_size;       /* For regular files, the file
+     D*                                 * size in bytes                   */
+     D*  time_t         st_atime;      /* Time of last access             */
+     D*  time_t         st_mtime;      /* Time of last data modification  */
+     D*  time_t         st_ctime;      /* Time of last file status change */
+     D*  dev_t          st_dev;        /* ID of device containing file    */
+     D*  size_t         st_blksize;    /* Size of a block of the file     */
+     D*  unsigned long  st_allocsize;  /* Allocation size of the file     */
+     D*  qp0l_objtype_t st_objtype;    /* AS/400 object type              */
+     D*  unsigned short st_codepage;   /* Object data codepage            */
+     D*  char           st_reserved1[66]; /* Reserved                     */
+     D* };
+     D*
+     D p_statds        S               *
+     D statds          DS                  BASED(p_statds)
+     D  st_mode                      10U 0
+     D  st_ino                       10U 0
+     D  st_nlink                      5U 0
+     D  st_pad                        2A
+     D  st_uid                       10U 0
+     D  st_gid                       10U 0
+     D  st_size                      10I 0
+     D  st_atime                     10I 0
+     D  st_mtime                     10I 0
+     D  st_ctime                     10I 0
+     D  st_dev                       10U 0
+     D  st_blksize                   10U 0
+     D  st_alctize                   10U 0
+     D  st_objtype                   12A
+     D  st_codepag                    5U 0
+     D  st_resv11                    62A
+     D  st_ino_gen_id                10U 0
+
+
+     D**********************************************************************
+     D* Group Information Structure (group)
+     D*
+     D*  struct group {
+     D*        char    *gr_name;        /* Group name.                      */
+     D*        gid_t   gr_gid;          /* Group id.                        */
+     D*        char    **gr_mem;        /* A null-terminated list of pointers
+     D*                                    to the individual member names.  */
+     D*  };
+     D*
+     D p_group         S               *
+     D group           DS                  Based(p_group)
+     D   gr_name                       *
+     D   gr_gid                      10U 0
+     D   gr_mem                        *   DIM(256)
+
+
+     D**********************************************************************
+     D*
+     D* User Information Structure (passwd)
+     D*
+     D* (Don't let the name fool you, this structure does not contain
+     D*  any password information.  Its named after the UNIX file that
+     D*  contains all of the user info.  That file is "passwd")
+     D*
+     D*   struct passwd {
+     D*        char    *pw_name;            /* User name.                   */
+     D*        uid_t   pw_uid;              /* User ID number.              */
+     D*        gid_t   pw_gid;              /* Group ID number.             */
+     D*        char    *pw_dir;             /* Initial working directory.   */
+     D*        char    *pw_shell;           /* Initial user program.        */
+     D*   };
+     D*
+     D p_passwd        S               *
+     D passwd          DS                  BASED(p_passwd)
+     D  pw_name                        *
+     D  pw_uid                       10U 0
+     D  pw_gid                       10U 0
+     D  pw_dir                         *
+     D  pw_shell                       *
+
+
+     D**********************************************************************
+     D* File Time Structure (utimbuf)
+     D*
+     D* struct utimbuf {
+     D*    time_t     actime;           /*  access time       */
+     D*    time_t     modtime;          /*  modification time */
+     D* };
+     D*
+     D p_utimbuf       S               *
+     D utimbuf         DS                  based(p_utimbuf)
+     D   actime                      10I 0
+     D   modtime                     10I 0
+
+
+     D**********************************************************************
+     D*
+     D* Directory Entry Structure (dirent)
+     D*
+     D* struct dirent {
+     D*   char           d_reserved1[16];  /* Reserved                       */
+     D*   unsigned int   d_reserved2;      /* Reserved                       */
+     D*   ino_t          d_fileno;         /* The file number of the file    */
+     D*   unsigned int   d_reclen;         /* Length of this directory entry
+     D*                                     * in bytes                       */
+     D*   int            d_reserved3;      /* Reserved                       */
+     D*   char           d_reserved4[8];   /* Reserved                       */
+     D*   qlg_nls_t      d_nlsinfo;        /* National Language Information
+     D*                                     * about d_name                   */
+     D*   unsigned int   d_namelen;        /* Length of the name, in bytes
+     D*                                     * excluding NULL terminator      */
+     D*   char           d_name[_QP0L_DIR_NAME]; /* Name...null terminated   */
+     D*
+     D* };
+     D*
+     D p_dirent        s               *
+     D dirent          ds                  based(p_dirent)
+     D   d_reserv1                   16A
+     D   d_reserv2                   10U 0
+     D   d_fileno                    10U 0
+     D   d_reclen                    10U 0
+     D   d_reserv3                   10I 0
+     D   d_reserv4                    8A
+     D   d_nlsinfo                   12A
+     D     nls_ccsid                 10I 0 OVERLAY(d_nlsinfo:1)
+     D     nls_cntry                  2A   OVERLAY(d_nlsinfo:5)
+     D     nls_lang                   3A   OVERLAY(d_nlsinfo:7)
+     D     nls_reserv                 3A   OVERLAY(d_nlsinfo:10)
+     D   d_namelen                   10U 0
+     D   d_name                     640A
+
+
+
+     D*--------------------------------------------------------------------
+     D* Determine file accessibility
+     D*
+     D* int access(const char *path, int amode)
+     D*
+     D*--------------------------------------------------------------------
+     D access          PR            10I 0 ExtProc('access')
+     D   Path                          *   Value Options(*string)
+     D   amode                       10I 0 Value
+
+     D*--------------------------------------------------------------------
+     D* Change Directory
+     D*
+     D* int chdir(const char *path)
+     D*--------------------------------------------------------------------
+     D chdir           PR            10I 0 ExtProc('chdir')
+     D   path                          *   Value Options(*string)
+
+     D*--------------------------------------------------------------------
+     D* Change file authorizations
+     D*
+     D* int chmod(const char *path, mode_t mode)
+     D*--------------------------------------------------------------------
+     D chmod           PR            10I 0 ExtProc('chmod')
+     D   path                          *   Value options(*string)
+     D   mode                        10U 0 Value
+
+     D*--------------------------------------------------------------------
+     D* Change Owner/Group of File
+     D*
+     D* int chown(const char *path, uid_t owner, gid_t group)
+     D*--------------------------------------------------------------------
+     D chown           PR            10I 0 ExtProc('chown')
+     D   path                          *   Value options(*string)
+     D   owner                       10U 0 Value
+     D   group                       10U 0 Value
+
+     D*--------------------------------------------------------------------
+     D* Close a file
+     D*
+     D* int close(int fildes)
+     D*
+     D* Note:  Because close() is already defined in socket_h, we use
+     D*         "closef" here to prevent a conflict.  Now, in V4, we
+     D*         can do the same thing with conditional compilation, so
+     D*         "close" is also defined.
+     D*--------------------------------------------------------------------
+     D closef          PR            10I 0 ExtProc('close')
+     D  handle                       10I 0 value
+
+     D/if not defined(CLOSE_PROTOTYPE)
+     D close           PR            10I 0 ExtProc('close')
+     D  handle                       10I 0 value
+     D/define CLOSE_PROTOTYPE
+     D/endif
+
+     D*--------------------------------------------------------------------
+     D* Close a directory
+     D*
+     D* int closedir(DIR *dirp)
+     D*--------------------------------------------------------------------
+     D closedir        PR            10I 0 EXTPROC('closedir')
+     D  dirhandle                      *   VALUE
+
+     D*--------------------------------------------------------------------
+     D* Create or Rewrite File
+     D*
+     D* int creat(const char *path, mode_t mode)
+     D*--------------------------------------------------------------------
+     D creat           PR            10I 0 ExtProc('creat')
+     D   path                          *   Value options(*string)
+     D   mode                        10U 0 Value
+
+     D*--------------------------------------------------------------------
+     D* Duplicate open file descriptor
+     D*
+     D* int dup(int fildes)
+     D*--------------------------------------------------------------------
+     D dup             PR            10I 0 ExtProc('dup')
+     D   fildes                      10I 0 Value
+
+     D*--------------------------------------------------------------------
+     D* Duplicate open file descriptor to another descriptor
+     D*
+     D* int dup2(int fildes, int fildes2)
+     D*--------------------------------------------------------------------
+     D dup2            PR            10I 0 ExtProc('dup2')
+     D   fildes                      10I 0 Value
+     D   fildes2                     10I 0 Value
+
+     D*--------------------------------------------------------------------
+     D* Change file authorizations by descriptor
+     D*
+     D* int fchmod(int fildes, mode_t mode)
+     D*--------------------------------------------------------------------
+     D fchmod          PR            10I 0 ExtProc('fchmod')
+     D   fildes                      10I 0 Value
+     D   mode                        10U 0 Value
+
+     D*--------------------------------------------------------------------
+     D* Change Owner and Group of File by Descriptor
+     D*
+     D* int fchown(int fildes, uid_t owner, gid_t group)
+     D*--------------------------------------------------------------------
+     D fchown          PR            10I 0 ExtProc('fchown')
+     D   fildes                      10I 0 Value
+     D   owner                       10U 0 Value
+     D   group                       10U 0 Value
+
+     D*--------------------------------------------------------------------
+     D* Perform File Control
+     D*
+     D* int fcntl(int fildes, int cmd, . . .)
+     D*--------------------------------------------------------------------
+     D/if not defined(FCNTL_PROTOTYPE)
+     D fcntl           PR            10I 0 ExtProc('fcntl')
+     D   fildes                      10I 0 Value
+     D   cmd                         10I 0 Value
+     D   arg                         10I 0 Value options(*nopass)
+     D/define FCNTL_PROTOTYPE
+     D/endif
+
+     D*--------------------------------------------------------------------
+     D* Get configurable path name variables by descriptor
+     D*
+     D* long fpathconf(int fildes, int name)
+     D*--------------------------------------------------------------------
+     D fpathconf       PR            10I 0 ExtProc('fpathconf')
+     D   fildes                      10I 0 Value
+     D   name                        10I 0 Value
+
+     D*--------------------------------------------------------------------
+     D* Get File Information by Descriptor
+     D*
+     D* int fstat(int fildes, struct stat *buf)
+     D*--------------------------------------------------------------------
+     D fstat           PR            10I 0 ExtProc('fstat')
+     D   fildes                      10I 0 Value
+     D   buf                           *   Value
+
+     D*--------------------------------------------------------------------
+     D* Synchronize Changes to fIle
+     D*
+     D* int fsync(int fildes)
+     D*--------------------------------------------------------------------
+     D fsync           PR            10I 0 ExtProc('fsync')
+     D   fildes                      10I 0 Value
+
+     D*--------------------------------------------------------------------
+     D* Truncate file
+     D*
+     D* int ftruncate(int fildes, off_t length)
+     D*--------------------------------------------------------------------
+     D ftruncate       PR            10I 0 ExtProc('ftruncate')
+     D   fildes                      10I 0 Value
+     D   length                      10I 0 Value
+
+     D*--------------------------------------------------------------------
+     D* Get current working directory
+     D*
+     D* char *getcwd(char *buf, size_t size)
+     D*--------------------------------------------------------------------
+     D getcwd          PR              *   ExtProc('getcwd')
+     D   buf                           *   Value
+     D   size                        10U 0 Value
+
+     D*--------------------------------------------------------------------
+     D* Get effective group ID
+     D*
+     D* gid_t getegid(void)
+     D*--------------------------------------------------------------------
+     D getegid         PR            10U 0 ExtProc('getegid')
+
+     D*--------------------------------------------------------------------
+     D* Get effective user ID
+     D*
+     D* uid_t geteuid(void)
+     D*--------------------------------------------------------------------
+     D geteuid         PR            10U 0 ExtProc('geteuid')
+
+     D*--------------------------------------------------------------------
+     D* Get Real Group ID
+     D*
+     D* gid_t getgid(void)
+     D*--------------------------------------------------------------------
+     D getgid          PR            10U 0 ExtProc('getgid')
+
+     D*--------------------------------------------------------------------
+     D* Get group information from group ID
+     D*
+     D* struct group *getgrgid(gid_t gid)
+     D*--------------------------------------------------------------------
+     D getgrid         PR              *   ExtProc('getgrgid')
+     D   gid                         10U 0 VALUE
+
+     D*--------------------------------------------------------------------
+     D* Get group info using group name
+     D*
+     D* struct group  *getgrnam(const char *name)
+     D*--------------------------------------------------------------------
+     D getgrnam        PR              *   ExtProc('getgrnam')
+     D   name                          *   VALUE
+
+     D*--------------------------------------------------------------------
+     D* Get group IDs
+     D*
+     D* int getgroups(int gidsetsize, gid_t grouplist[])
+     D*--------------------------------------------------------------------
+     D getgroups       PR              *   ExtProc('getgroups')
+     D   gidsetsize                  10I 0 VALUE
+     D   grouplist                     *
+
+     D*--------------------------------------------------------------------
+     D* Get user information by user-name
+     D*
+     D* (Don't let the name mislead you, this does not return the password,
+     D*  the user info database on unix systems is called "passwd",
+     D*  therefore, getting the user info is called "getpw")
+     D*
+     D* struct passwd *getpwnam(const char *name)
+     D*--------------------------------------------------------------------
+     D getpwnam        PR              *   ExtProc('getpwnam')
+     D   name                          *   Value
+
+     D*--------------------------------------------------------------------
+     D* Get user information by user-id
+     D*
+     D* (Don't let the name mislead you, this does not return the password,
+     D*  the user info database on unix systems is called "passwd",
+     D*  therefore, getting the user info is called "getpw")
+     D*
+     D* struct passwd *getpwuid(uid_t uid)
+     D*--------------------------------------------------------------------
+     D getpwuid        PR              *   extproc('getpwuid')
+     D   uid                         10U 0 Value
+
+     D*--------------------------------------------------------------------
+     D* Get Real User-ID
+     D*
+     D* uid_t getuid(void)
+     D*--------------------------------------------------------------------
+     D getuid          PR            10U 0 ExtProc('getuid')
+
+     D*--------------------------------------------------------------------
+     D* Perform I/O Control Request
+     D*
+     D* int ioctl(int fildes, unsigned long req, ...)
+     D*--------------------------------------------------------------------
+     D ioctl           PR            10I 0 ExtProc('ioctl')
+     D   fildes                      10I 0 Value
+     D   req                         10U 0 Value
+     D   arg                           *   Value
+
+     D*--------------------------------------------------------------------
+     D* Create Link to File
+     D*
+     D* int link(const char *existing, const char *new)
+     D*--------------------------------------------------------------------
+     D link            PR            10I 0 ExtProc('link')
+     D   existing                      *   Value options(*string)
+     D   new                           *   Value options(*string)
+
+     D*--------------------------------------------------------------------
+     D* Set File Read/Write Offset
+     D*
+     D* off_t lseek(int fildes, off_t offset, int whence)
+     D*--------------------------------------------------------------------
+     D lseek           PR            10I 0 ExtProc('lseek')
+     D   fildes                      10I 0 value
+     D   offset                      10I 0 value
+     D   whence                      10I 0 value
+
+     D*--------------------------------------------------------------------
+     D* Get File or Link Information
+     D*
+     D* int lstat(const char *path, struct stat *buf)
+     D*--------------------------------------------------------------------
+     D lstat           PR            10I 0 ExtProc('lstat')
+     D   path                          *   Value options(*string)
+     D   buf                           *   Value
+
+     D*--------------------------------------------------------------------
+     D* Make Directory
+     D*
+     D* int mkdir(const char *path, mode_t mode)
+     D*--------------------------------------------------------------------
+     D mkdir           PR            10I 0 ExtProc('mkdir')
+     D   path                          *   Value options(*string)
+     D   mode                        10U 0 Value
+
+     D*--------------------------------------------------------------------
+     D* Open a File
+     D*
+     D* int open(const char *path, int oflag, . . .);
+     D*--------------------------------------------------------------------
+     D open            PR            10I 0 ExtProc('open')
+     D  filename                       *   value options(*string)
+     D  openflags                    10I 0 value
+     D  mode                         10U 0 value options(*nopass)
+     D  ccsid                        10U 0 value options(*nopass)
+     D  txtcreatid                   10U 0 value options(*nopass)
+
+     D*--------------------------------------------------------------------
+     D* Open a Directory
+     D*
+     D* DIR *opendir(const char *dirname)
+     D*--------------------------------------------------------------------
+     D opendir         PR              *   EXTPROC('opendir')
+     D  dirname                        *   VALUE options(*string)
+
+     D*--------------------------------------------------------------------
+     D* Get configurable path name variables
+     D*
+     D* long pathconf(const char *path, int name)
+     D*--------------------------------------------------------------------
+     D pathconf        PR            10I 0 ExtProc('pathconf')
+     D   path                          *   Value options(*string)
+     D   name                        10I 0 Value
+
+     D*--------------------------------------------------------------------
+     D* Get path name of object from its file id
+     D*
+     D* char *Qp0lGetPathFromFileID(char *buf, size_t size,Qp0lFID_t fileid)
+     D*--------------------------------------------------------------------
+     D GetPathFID      PR              *   ExtProc('Qp0lGetPathFromFileID')
+     D   buf                           *   Value
+     D   size                        10U 0 Value
+     D   fileid                      16A
+
+     D*--------------------------------------------------------------------
+     D* Rename File or Directory, return error if a file/dir under the
+     D*   "new" name already exists.
+     D*
+     D* int Qp0lRenameKeep(const char *old, const char *new)
+     D*--------------------------------------------------------------------
+     D Rename          PR            10I 0 ExtProc('Qp0lRenameKeep')
+     D   old                           *   Value options(*string)
+     D   new                           *   Value options(*string)
+
+     D*--------------------------------------------------------------------
+     D* Rename File or Directory.  If another file/dir exists under the
+     D*    "new" name, delete it first.
+     D*
+     D* int Qp0lRenameUnlink(const char *old, const char *new)
+     D*--------------------------------------------------------------------
+     D Replace         PR            10I 0 ExtProc('Qp0lRenameUnlink')
+     D   old                           *   Value options(*string)
+     D   new                           *   Value options(*string)
+
+     D*--------------------------------------------------------------------
+     D* Read From a File
+     D*
+     D* ssize_t read(int handle, void *buffer, size_t bytes);
+     D*--------------------------------------------------------------------
+     D read            PR            10I 0 ExtProc('read')
+     D  handle                       10i 0 value
+     D  buffer                         *   value
+     D  bytes                        10U 0 value
+
+     D*--------------------------------------------------------------------
+     D* Read Directory Entry
+     D*
+     D* struct dirent *readdir(DIR *dirp)
+     D*--------------------------------------------------------------------
+     D readdir         PR              *   EXTPROC('readdir')
+     D  dirp                           *   VALUE
+
+     D*--------------------------------------------------------------------
+     D* Read Value of Symbolic Link
+     D*
+     D* int readlink(const char *path, char *buf, size_t bufsiz)
+     D*--------------------------------------------------------------------
+     D readlink        PR            10I 0 ExtProc('readlink')
+     D   path                          *   value
+     D   buf                           *   value
+     D   bufsiz                      10U 0 value
+
+     D*--------------------------------------------------------------------
+     D* Reset Directory Stream to Beginning
+     D*
+     D* void rewinddir(DIR *dirp)
+     D*--------------------------------------------------------------------
+     D rewinddir       PR                  ExtProc('rewinddir')
+     D   dirp                          *   value
+
+
+     D*--------------------------------------------------------------------
+     D* Remove Directory
+     D*
+     D* int rmdir(const char *path)
+     D*--------------------------------------------------------------------
+     D rmdir           PR            10I 0 ExtProc('rmdir')
+     D   path                          *   value options(*string)
+
+     D*--------------------------------------------------------------------
+     D* Get File Information
+     D*
+     D* int stat(const char *path, struct stat *buf)
+     D*--------------------------------------------------------------------
+     D stat            PR            10I 0 ExtProc('stat')
+     D   path                          *   value options(*string)
+     D   buf                           *   value
+
+     D*--------------------------------------------------------------------
+     D* Make Symbolic Link
+     D*
+     D* int symlink(const char *pname, const char *slink)
+     D*--------------------------------------------------------------------
+     D symlink         PR            10I 0 ExtProc('symlink')
+     D   pname                         *   value options(*string)
+     D   slink                         *   value options(*string)
+
+     D*--------------------------------------------------------------------
+     D* Get system configuration variables
+     D*
+     D* long sysconf(int name)
+     D*--------------------------------------------------------------------
+     D sysconf         PR            10I 0 ExtProc('sysconf')
+     D   name                        10I 0 Value
+
+     D*--------------------------------------------------------------------
+     D* Set Authorization Mask for Job
+     D*
+     D* mode_t umask(mode_t cmask)
+     D*--------------------------------------------------------------------
+     D umask           PR            10U 0 ExtProc('umask')
+     D   cmask                       10U 0 Value
+
+     D*--------------------------------------------------------------------
+     D* Remove Link to File.  (Deletes Directory Entry for File, and if
+     D*    this was the last link to the file data, the file itself is
+     D*    also deleted)
+     D*
+     D* int unlink(const char *path)
+     D*--------------------------------------------------------------------
+     D unlink          PR            10I 0 ExtProc('unlink')
+     D   path                          *   Value options(*string)
+
+     D*--------------------------------------------------------------------
+     D* Set File Access & Modification Times
+     D*
+     D* int utime(const char *path, const struct utimbuf *times)
+     D*--------------------------------------------------------------------
+     D utime           PR            10I 0 ExtProc('utime')
+     D   path                          *   value options(*string)
+     D   times                         *   value
+
+     D*--------------------------------------------------------------------
+     D* Write to a file
+     D*
+     D* ssize_t write(int fildes, const void *buf, size_t bytes)
+     D*--------------------------------------------------------------------
+     D write           PR            10I 0 ExtProc('write')
+     D  handle                       10I 0 value
+     D  buffer                         *   value
+     D  bytes                        10U 0 value
