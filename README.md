@@ -22,6 +22,8 @@ This is the most modern approach and is the approach recommended if you wish to 
        - `cd httpapi`
        - `make LIBRARY=libhttp`
 
+**NOTE**: To keep the messages on the screen clean and easy to follow, compile errors are not printed to the screen. Instead, files are created in the `tmp` subdirectory containing the output of the various compile commands.
+
 
 ALTERNATIVE #2: INSTALL/COMPILE FROM A SAVE FILE
 ---------------------------------------------------------------------
