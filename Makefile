@@ -15,7 +15,7 @@ USE_XML			 	 ?= 1
 BUILD_EXAMPLES ?= 1
 DEBUG					 ?= 1
 
-ifeq (,$(BUILDLIB))
+ifneq (,$(BUILDLIB))
 LIBRARY=$(BUILDLIB)
 endif
 
