@@ -1,6 +1,7 @@
 # HTTPAPI -- HTTP client support for ILE RPG -- README
 
-Main website https://www.scottklement.com
+Main website https://www.scottklement.com/httpapi/
+Discussion/Support forum: https://www.scottklement.com/forums/
 
 ALTERNATIVE #1: (Recommended) Use Git/Makefile
 ---------------------------------------------------------------------
