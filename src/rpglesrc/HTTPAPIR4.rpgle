@@ -3291,6 +3291,7 @@
      D p_ModTime       S               *
      D wwModTime       S               Z   based(p_ModTime)
      D wwMT            S               Z
+     D wwFreeData      S              1N   INZ(*OFF)
 
      c                   eval      RDWR_Reader_p = *null
      c                   eval      RDWR_Writer_p = *null
@@ -3386,6 +3387,7 @@
       * Translate Upload data to remote character encoding
       *  (if necessary)
       *********************************************************
+     c                   eval      wwUplData = peUplData
      c                   eval      wwUplLen = peUplDataLen
      c                   if        peUplDataLen>0 and peUplProc=*NULL
      c                   eval      wwUplLen = http_xlatedyn( peUplDataLen
@@ -3395,6 +3397,7 @@
      c                   if        wwUplLen = -1
      c                   return    -1
      c                   endif
+     c                   eval      wwFreeData = *on
      c                   endif
 
       *********************************************************
@@ -3442,7 +3445,7 @@
      c                   eval      wkSaveAuth = *blanks
      c                   endif
 
-     c                   if        wwUplData <> *Null
+     c                   if        wwFreeData = *ON and wwUplData <> *Null
      c                   callp     xdealloc(wwUplData)
      c                   endif
 

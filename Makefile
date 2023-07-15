@@ -39,7 +39,6 @@ CL_OPTS       :=
 RPG_OPTS      := option(*noseclvl)
 PGM_OPTS      :=
 OWNER         := qpgmr
-DEBUG         := 0
 USRPRF        := *user
 BNDSRVPGM			:=
 PGM_ACTGRP		:= HTTPAPI
@@ -204,7 +203,11 @@ $(ILIBRARY)/QRPGLESRC.file: src/rpglesrc/VERSION.rpgleinc | $(ILIBRARY)
 	  system -v "addpfm file($(LIBRARY)/$(basename $(@F))) mbr($${MBR}) srctype(sqlrpgle)"; \
 	  cat "src/rpglesrc/$${MBR}.sqlrpgle" | Rfile -wQ "$(LIBRARY)/$(basename $(@F))($${MBR})"; \
 	done
-	for MBR in CHANGELOG README; do \
+	for MBR in README; do \
+	  system -v "addpfm file($(LIBRARY)/$(basename $(@F))) mbr($${MBR}) srctype(txt)"; \
+	  cat "$${MBR}.md" | Rfile -wQ "$(LIBRARY)/$(basename $(@F))($${MBR})"; \
+	done
+	for MBR in CHANGELOG; do \
 	  system -v "addpfm file($(LIBRARY)/$(basename $(@F))) mbr($${MBR}) srctype(txt)"; \
 	  cat "$${MBR}.txt" | Rfile -wQ "$(LIBRARY)/$(basename $(@F))($${MBR})"; \
 	done
