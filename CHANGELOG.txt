@@ -1,6 +1,7 @@
 Changes to version 1.46 from 1.45
   - Convert source to IFS files
   - Create Makefile for building easily
+  - Fix problem using content-length: 0 request bodies
 
 Changes to version 1.45 from 1.44
   - Change HTTPAPI command so it doesn't report a failure when
