@@ -377,7 +377,7 @@ $(ILIBRARY)/%.file: src/ddssrc/%.dspf | $$($$*.file_deps) $(ISRCFILE)
 
 $(IPKGLIB)/HTTPAPI.file: all $(SRCF_OBJS) membertext | $(IPKGLIB)
 	@$(info Creating $(@))touch -C 1208 $(LOGFILE)
-	(rm -rf $(ISRCFILE) $(ILIBRARY)/EVFEVENT.file $(ILIBRARY)/*.MODULE
+	(rm -rf $(ISRCFILE) $(ILIBRARY)/EVFEVENT.file $(ILIBRARY)/*.MODULE $(ILIBRARY)/MKEXPATCL.pgm
 	system -v 'dltf file($(PKGLIB)/HTTPAPI)' || true
 	system -v 'crtsavf file($(PKGLIB)/HTTPAPI)'
 	system -v 'savlib lib($(LIBRARY)) dev(*savf) savf($(PKGLIB)/HTTPAPI) tgtrls($(TGTRLS)) DTACPR(*HIGH)') $(OUTPUT)
@@ -388,10 +388,11 @@ build:
 	mkdir build) $(OUTPUT)
 
 membertext: $(SRCF_OBJS) | $(ILIBRARY)
-	$(SETLIBLIST)
+	@$(info Setting member text descriptions)touch -C 1208 $(LOGFILE)
+	($(SETLIBLIST)
 	while read FILE MBR TEXT; do \
 		system -v "chgpfm file($(LIBRARY)/$${FILE}) mbr($${MBR}) text('$${TEXT}')"; \
-	done < scripts/member_text.txt
+	done < scripts/member_text.txt) $(OUTPUT)
 
 build/httpapi.zip: $(SRCF_OBJS) membertext | build
 	@$(info Creating $(@))touch -C 1208 $(LOGFILE)
