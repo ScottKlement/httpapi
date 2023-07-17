@@ -81,6 +81,7 @@ define EXAMPLES
 	EXAMPLE7.pgm  EXAMPLE8.pgm  EXAMPLE9.pgm  EXAMPLE10.pgm EXAMPLE11.pgm EXAMPLE12.pgm	
 	EXAMPLE13.pgm EXAMPLE14.pgm EXAMPLE15.pgm EXAMPLE16.pgm EXAMPLE17.pgm EXAMPLE18.pgm	
 	EXAMPLE19.pgm EXAMPLE20.pgm EXAMPLE21.pgm EXAMPLE22.pgm EXAMPLE23.pgm EXAMPLE24.pgm	
+	EXAMPLE25.pgm
 	EXAMPLE40.pgm EXAMPLE41.pgm 
 	EXAMPLE9.cmd
 endef	
@@ -185,15 +186,16 @@ $(ILIBRARY)/QRPGLESRC.file: src/rpglesrc/VERSION.rpgleinc | $(ILIBRARY)
 	system -v 'crtsrcpf file($(LIBRARY)/$(basename $(@F))) rcdlen(112)'
 	system -v "chgobjown obj($(LIBRARY)/$(basename $(@F))) objtype(*$(subst .,,$(suffix $(@F)))) newown($(OWNER)) curownaut(*revoke)"
 	system -v "grtobjaut obj($(LIBRARY)/$(basename $(@F))) objtype(*$(subst .,,$(suffix $(@F)))) user(*public) aut(*use) replace(*yes)"
-	for MBR in ERRNO_H CONFIG_H HTTPAPI_H IFSIO_H COMM_H EXPAT_H GSKSSL_H HEADER_H HTTPCMD_H MD4_H NTLM_C HTLM_H \
+	for MBR in ERRNO_H CONFIG_H HTTPAPI_H IFSIO_H COMM_H EXPAT_H GSKSSL_H HEADER_H HTTPCMD_H MD4_H NTLM_C NTLM_H \
 					   NTLM_P PRIVATE_H RDWR_H SOCKET_H VERSION; do
 	  system -v "addpfm file($(LIBRARY)/$(basename $(@F))) mbr($${MBR}) srctype(rpgle)"; \
 	  cat "src/rpglesrc/$${MBR}.rpgleinc" | Rfile -wQ "$(LIBRARY)/$(basename $(@F))($${MBR})"; \
 	done
-	for MBR in CCSIDR4 COMMSSLR4 COMMTCPR4 COMPATR4 CONFIGR4 DECODER4 ENCODER4 ENCRYPTR4 \
+	for MBR in CCSIDR4 COMMSSLR4 COMMTCPR4 COMPATR4 CONFIGR4 DECODERR4 ENCODERR4 ENCRYPTR4 \
 						 EXAMPLE1 EXAMPLE2 EXAMPLE3 EXAMPLE4 EXAMPLE5 EXAMPLE6 EXAMPLE7 EXAMPLE8 EXAMPLE9 EXAMPLE10 \
 						 EXAMPLE11 EXAMPLE12 EXAMPLE14 EXAMPLE15 EXAMPLE16 EXAMPLE17 EXAMPLE18 EXAMPLE19 EXAMPLE20 \
-						 EXMAPLE21 EXAMPLE22 EXAMPLE23 EXAMPLE24 EXAMPLE40 EXAMPLE41 \
+						 EXAMPLE21 EXAMPLE22 EXAMPLE23 EXAMPLE24 EXAMPLE25 EXAMPLE26 EXAMPLE27 \
+						 EXAMPLE35 EXAMPLE37 EXAMPLE38 EXAMPLE40 EXAMPLE41 \
 						 HEADERR4 HTTPAPIR4 HTTPCMDR4 HTTPQSHR4 HTTPUTILR4 HTTPXMLR4 INSTALLR4 MD4R4 \
 						 MSTRINGR4 NTLMR4 XMLSTUBR4; do
 	  system -v "addpfm file($(LIBRARY)/$(basename $(@F))) mbr($${MBR}) srctype(rpgle)"; \
@@ -373,7 +375,7 @@ $(ILIBRARY)/%.file: src/ddssrc/%.dspf | $$($$*.file_deps) $(ISRCFILE)
 	system -v "chgobjown obj($(LIBRARY)/$(basename $(@F))) objtype(*$(subst .,,$(suffix $(@F)))) newown($(OWNER)) curownaut(*revoke)"
 	system -v "grtobjaut obj($(LIBRARY)/$(basename $(@F))) objtype(*$(subst .,,$(suffix $(@F)))) user(*public) aut(*use) replace(*yes)") $(OUTPUT)
 
-$(IPKGLIB)/HTTPAPI.file: all $(SRCF_OBJS) | $(IPKGLIB)
+$(IPKGLIB)/HTTPAPI.file: all $(SRCF_OBJS) membertext | $(IPKGLIB)
 	@$(info Creating $(@))touch -C 1208 $(LOGFILE)
 	(rm -rf $(ISRCFILE) $(ILIBRARY)/EVFEVENT.file $(ILIBRARY)/*.MODULE
 	system -v 'dltf file($(PKGLIB)/HTTPAPI)' || true
@@ -385,7 +387,13 @@ build:
 	(rm -rf build
 	mkdir build) $(OUTPUT)
 
-build/httpapi.zip: $(SRCF_OBJS) | build
+membertext: $(SRCF_OBJS) | $(ILIBRARY)
+	$(SETLIBLIST)
+	while read FILE MBR TEXT; do \
+		system -v "chgpfm file($(LIBRARY)/$${FILE}) mbr($${MBR}) text('$${TEXT}')"; \
+	done < scripts/member_text.txt
+
+build/httpapi.zip: $(SRCF_OBJS) membertext | build
 	@$(info Creating $(@))touch -C 1208 $(LOGFILE)
 	(scripts/mkzip.sh "$(LIBRARY)" "$(CURDIR)") $(OUTPUT)
 

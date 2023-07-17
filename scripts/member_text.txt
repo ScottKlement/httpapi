@@ -1,0 +1,70 @@
+QCLSRC INSTALL Tool to build the service programs
+QCLSRC LICENSE License info
+QCLSRC MKEXPATCL Build the eXpat service program
+QCLSRC PACKAGE Tool to create savf / zip / xml
+QCMDSRC EXAMPLE9 Example: Convert HTML to PDF
+QCMDSRC HTTPAPI CL Interface to HTTPAPI
+QCMDSRC HTTPAPIPNL Help for HTTPAPI cmd
+QRPGLESRC CCSIDR4 Routines for ASCII/EBCDIC translation
+QRPGLESRC CHANGELOG List of changes to HTTPAPI
+QRPGLESRC COMM_H Generic Communications API
+QRPGLESRC COMMSSLR4 SSL/TLS Communication Driver
+QRPGLESRC COMMTCPR4 TCP Communication Driver
+QRPGLESRC COMPATR4 Deprecated Routines required for back-compat
+QRPGLESRC CONFIG_H HTTP-API compile-time configuration
+QRPGLESRC CONFIGR4 Program to display license & get config info
+QRPGLESRC DECODERR4 Routines for decoding HTTP data
+QRPGLESRC ENCODERR4 Routines for encoding HTTP data
+QRPGLESRC ENCRYPTR4 Crypto Routines
+QRPGLESRC ERRNO_H Header for Error Handling in C/UNIX APIs
+QRPGLESRC EXAMPLE1 Example of getting a PDF document
+QRPGLESRC EXAMPLE10 Example of updating Twitter status
+QRPGLESRC EXAMPLE11 Example of parsing an XML document with HTTPAPI
+QRPGLESRC EXAMPLE12 Example of working with cookies
+QRPGLESRC EXAMPLE13 Example of Download Currency Exchange Rates (REST)
+QRPGLESRC EXAMPLE14 Example of XML Parsing UPS Package Tracking
+QRPGLESRC EXAMPLE16 Example: Consume SOAP Web service
+QRPGLESRC EXAMPLE17 Example: ABA Bank Routing Number
+QRPGLESRC EXAMPLE18 Example: SOAP w/longer SOAPAction
+QRPGLESRC EXAMPLE2 Example: Show Status, Use Proxy
+QRPGLESRC EXAMPLE23 Example: Validate SSL Certificates
+QRPGLESRC EXAMPLE24 Example: Using GSKit certificate validation
+QRPGLESRC EXAMPLE25 Example: GET from IIS using Basic, Digest, NTLM
+QRPGLESRC EXAMPLE26 Example: GET with auth using persistent routines
+QRPGLESRC EXAMPLE27 Example: GET when you know its NTLM
+QRPGLESRC EXAMPLE3 Example of using GET with SSL
+QRPGLESRC EXAMPLE35 Example: POST with NTLM, Basic or Digest
+QRPGLESRC EXAMPLE37 Example: POST only NTLM
+QRPGLESRC EXAMPLE38 Example: POST with NTLM
+QRPGLESRC EXAMPLE4 Example: Simple POST to a cgi-script
+QRPGLESRC EXAMPLE5 Example of supplying user/pass to HTTP server
+QRPGLESRC EXAMPLE6 Example of using POST with SSL & raw output
+QRPGLESRC EXAMPLE7 Example of posting using multipart/form-data
+QRPGLESRC EXAMPLE8 Example of showing the download status w/xproc
+QRPGLESRC EXAMPLE9 Example of using POST with SSL & raw output
+QRPGLESRC EXPAT_H RPG defs for calling eXpat
+QRPGLESRC HEADER_H Routines for working with Headers & Cookies
+QRPGLESRC HEADERR4 Routines for working with Headers Cookies
+QRPGLESRC HTTPAPI_H HTTPAPI header member
+QRPGLESRC HTTPAPIR4 HTTP-API service program
+QRPGLESRC HTTPCMD_H Command-line interface to HTTPAPI
+QRPGLESRC HTTPCMDR4 Command-line interface for HTTPAPI
+QRPGLESRC HTTPQSHR4 QShell interface for HTTPAPI
+QRPGLESRC HTTPUTILR4 Misc Utilities that HTTPAPI uses
+QRPGLESRC HTTPXMLR4 Routines for XML parsing with EXPAT
+QRPGLESRC IFSIO_H Integrated File System API Header File
+QRPGLESRC INSTALLR4 (Used during install process)
+QRPGLESRC LICENSE License info
+QRPGLESRC MD4_H Prototypes for MD4 Digest
+QRPGLESRC MD4R4 RPG Version of RSA MD4 Digest
+QRPGLESRC NTLM_C NTLM Copyright and Version
+QRPGLESRC NTLM_H NTLM Header File
+QRPGLESRC NTLM_P NTML Private Copybook
+QRPGLESRC NTLMR4 Main NTLM Authority plugin code
+QRPGLESRC PRIVATE_H Global/Private HTTPAPI definitions
+QRPGLESRC SOCKET_H Header File for Sockets API
+QRPGLESRC XMLSTUBR4 Stub routines
+QSRVSRC EXPAT Exports for eXpat
+QSRVSRC HTTPAPI1 Binding Language source for HTTPAPI without SSL
+QSRVSRC HTTPAPI2 Binding Language source for HTTPAPI with SSL
+QSRVSRC LICENSE License info
