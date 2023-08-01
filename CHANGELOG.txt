@@ -1,3 +1,7 @@
+Changes to version 1.47 from 1.46
+  - Fix problem in HTTP_REQ when HTTP_xlatedyn cannot translate
+     data (to prevent it crashing)
+
 Changes to version 1.46 from 1.45
   - Convert source to IFS files
   - Create Makefile for building easily

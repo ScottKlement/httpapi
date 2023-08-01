@@ -30,9 +30,9 @@
       /endif
 
      D HTTPAPI_VERSION...
-     D                 C                   CONST('1.46')
+     D                 C                   CONST('1.47')
      D HTTPAPI_RELDATE...
-     D                 C                   CONST('2023-04-16')
+     D                 C                   CONST('2023-08-01')
 
       /copy config_h
 

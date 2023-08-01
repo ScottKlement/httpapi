@@ -4100,12 +4100,16 @@
                                  : RcvStrBuf.Ptr
                                  : TO_SYSTEM
                                  : p_Result );
-              if Len > ResultSize;
-                 Len = ResultSize;
+              if Len < 1;
+                %len(resultStr) = 0;
+              else;
+                if Len > ResultSize;
+                  Len = ResultSize;
+                endif;
+                %len(resultstr) = Len;
+                memcpy(resultPtr: p_Result: Len);
+                xdealloc(p_Result);
               endif;
-              %len(resultstr) = Len;
-              memcpy(resultPtr: p_Result: Len);
-              xdealloc(p_Result);
            endif;
         endif;
 

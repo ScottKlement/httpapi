@@ -34,7 +34,7 @@
      ***  to the web servers if you don't specify it explcitly when
      ***  calling the routines.
 
-     D HTTP_USERAGENT  C                   CONST('http-api/1.45')
+     D HTTP_USERAGENT  C                   CONST('http-api/1.47')
 
      ***  This is the 'Content-Type' that is reported by this API
      ***  to the web servers if you don't specify it explcitly when
