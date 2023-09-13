@@ -1,3 +1,7 @@
+Changes to version 1.48 from 1.47
+  - Fix bug in Makefile that prevented command members from being 
+     included in packaged distribution
+
 Changes to version 1.47 from 1.46
   - Fix problem in HTTP_REQ when HTTP_xlatedyn cannot translate
      data (to prevent it crashing)

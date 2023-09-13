@@ -6,7 +6,7 @@
 SHELL = /usr/bin/qsh
 .SHELLFLAGS = -ec
 
-VERSION        := 1.46
+VERSION        := 1.48
 COPYRIGHT      := Version $(VERSION). Copyright 2001-2023 Scott C. Klement.
 LIBRARY				 ?= LIBHTTP
 PKGLIB				 ?= LIBHTTPPKG
@@ -262,7 +262,7 @@ $(ILIBRARY)/QCMDSRC.file: | $(ILIBRARY)
 	system -v "grtobjaut obj($(LIBRARY)/$(basename $(@F))) objtype(*$(subst .,,$(suffix $(@F)))) user(*public) aut(*use) replace(*yes)"
 	for MBR in HTTPAPI EXAMPLE9; do
 	  system -v "addpfm file($(LIBRARY)/$(basename $(@F))) mbr($${MBR}) srctype(cmd)"; \
-	  cat "src/cmdsrc/$${MBR}" | Rfile -wQ "$(LIBRARY)/$(basename $(@F))($${MBR})"; \
+	  cat "src/cmdsrc/$${MBR}.cmd" | Rfile -wQ "$(LIBRARY)/$(basename $(@F))($${MBR})"; \
 	done
 	system -v "addpfm file($(LIBRARY)/$(basename $(@F))) mbr(HTTPAPIPNL) srctype(pnlgrp)"
 	cat "src/pnlsrc/HTTPAPI.pnlgrp" | Rfile -wQ "$(LIBRARY)/$(basename $(@F))(HTTPAPIPNL)") $(OUTPUT)
