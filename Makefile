@@ -207,15 +207,15 @@ $(ILIBRARY)/QRPGLESRC.file: src/rpglesrc/VERSION.rpgleinc | $(ILIBRARY)
 	done
 	for MBR in README; do \
 	  system -v "addpfm file($(LIBRARY)/$(basename $(@F))) mbr($${MBR}) srctype(txt)"; \
-	  cat "$${MBR}.md" | Rfile -wQ "$(LIBRARY)/$(basename $(@F))($${MBR})"; \
+	  cat "$${MBR}.md" | Rfile -wQl "$(LIBRARY)/$(basename $(@F))($${MBR})"; \
 	done
 	for MBR in CHANGELOG; do \
 	  system -v "addpfm file($(LIBRARY)/$(basename $(@F))) mbr($${MBR}) srctype(txt)"; \
-	  cat "$${MBR}.txt" | Rfile -wQ "$(LIBRARY)/$(basename $(@F))($${MBR})"; \
+	  cat "$${MBR}.txt" | Rfile -wQl "$(LIBRARY)/$(basename $(@F))($${MBR})"; \
 	done
 	for MBR in LICENSE; do \
 	  system -v "addpfm file($(LIBRARY)/$(basename $(@F))) mbr($${MBR}) srctype(txt)"; \
-	  cat "src/rpglesrc/$${MBR}.txt" | Rfile -wQ "$(LIBRARY)/$(basename $(@F))($${MBR})"; \
+	  cat "src/rpglesrc/$${MBR}.txt" | Rfile -wQl "$(LIBRARY)/$(basename $(@F))($${MBR})"; \
 	done) $(OUTPUT)
 
 $(ILIBRARY)/QCLSRC.file: | $(ILIBRARY)
