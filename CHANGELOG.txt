@@ -1,3 +1,10 @@
+Changes to version 1.51 from 1.49 (Skipped 1.50 to avoid confusing with 1.5)
+  - Allow long URLs in http_redir_loc
+
+Changes to version 1.49 from 1.48
+  - Update copyright to 2024
+  - Wrap long lines in README
+
 Changes to version 1.48 from 1.47
   - Fix bug in Makefile that prevented command members from being 
      included in packaged distribution

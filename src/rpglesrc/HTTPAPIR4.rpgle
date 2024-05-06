@@ -1,5 +1,5 @@
      /*-                                                                            +
-      * Copyright (c) 2001-2023 Scott C. Klement                                    +
+      * Copyright (c) 2001-2024 Scott C. Klement                                    +
       * All rights reserved.                                                        +
       *                                                                             +
       * Redistribution and use in source and binary forms, with or without          +
@@ -239,6 +239,9 @@
      D   handle                            like(RDWR_HANDLE) value
      D   Usage                        3u 0 value
 
+     D http_redir_loc_long...
+     D                 PR         32767A   varying
+
       ***  Global Constants  ***
 
      D CRLF            C                   CONST(x'0d25')
@@ -247,7 +250,7 @@
 
       ***  Global Variables  ***
 
-     D wkRedirLoc      s           1024A   varying inz('')
+     D wkRedirLoc      s          32767A   varying inz('')
 
      D dsAuth          DS
      D   dsAuthType                   1A   inz(HTTP_AUTH_NONE)
@@ -2067,6 +2070,17 @@
      P                 E
 
 
+      *+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+      * http_redir_loc_long(): Retrieve location provided by a redirect
+      *   request -- returning a longer string.
+      *+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+     P http_redir_loc_long...
+     P                 B                   export
+     D                 PI         32767A   varying
+     c                   return    wkRedirLoc
+     P                 E
+
+
       *+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
       *  http_long_ParseURL(): Parse URL into it's component parts
       *+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -3848,13 +3862,11 @@
      c                   if        pePort = 0
      c                   eval      wwReq = wwReq
      C                                   + 'Host: ' + %trim(peHost)
-     c                                   + ' HTTP/1.1'
      C                                   + CRLF
      c                   else
      c                   eval      wwReq = wwReq
      C                                   + 'Host: ' + %trim(peHost)
      c                                   + ':' + %trim(%editc(pePort:'L'))
-     c                                   + ' HTTP/1.1'
      C                                   + CRLF
      c                   endif
 

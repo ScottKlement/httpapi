@@ -1,4 +1,4 @@
-Copyright (c) 2001-2023 Scott C. Klement, Thomas Raddatz
+Copyright (c) 2001-2024 Scott C. Klement, Thomas Raddatz
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without

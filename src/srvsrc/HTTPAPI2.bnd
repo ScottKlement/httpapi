@@ -1,5 +1,5 @@
 /*-                                                                            +
- * Copyright (c) 2001-2023 Scott C. Klement                                    +
+ * Copyright (c) 2001-2024 Scott C. Klement                                    +
  * All rights reserved.                                                        +
  *                                                                             +
  * Redistribution and use in source and binary forms, with or without          +
@@ -161,6 +161,8 @@ STRPGMEXP PGMLVL(*CURRENT) SIGNATURE('HTTPAPISSL001')
      EXPORT SYMBOL(HTTP_NEXTXMLATTRUCS)
 /* Added in version 1.42 */
      EXPORT SYMBOL(HTTPS_CERTSTORE)
+/* Added in version 1.51 */
+     EXPORT SYMBOL(HTTP_REDIR_LOC_LONG)
 ENDPGMEXP
 STRPGMEXP PGMLVL(*PRV) SIGNATURE('HTTPAPISSL000')
 /* This is a "dummy" entry required for V5R1 compatibility */

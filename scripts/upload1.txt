@@ -4,7 +4,7 @@ rem *  This is an MS-DOS BATCH file for uploading all of the     *
 rem *  HTTPAPI members to the iSeries.  It's intended to make    *
 rem *  the process of uploading this data less arduous.          *
 rem **************************************************************
-rem Copyright (c) 2001-2023 Scott C. Klement
+rem Copyright (c) 2001-2024 Scott C. Klement
 rem All rights reserved.
 rem
 rem Redistribution and use in source and binary forms, with or without
