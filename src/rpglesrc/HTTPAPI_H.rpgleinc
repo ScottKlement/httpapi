@@ -484,6 +484,8 @@
       *          - pass *blanks to send an empty SoapAction.
       *          - pass *omit (or don't pass the parm at all) if
       *             you don't want a SoapAction header to be sent.
+      *  peDataLen64 = use this instead of peDataLen for uploading 
+      *                sizes larger than 2gb. (0 means use peDataLen)
       *
       *  Returns (same as http_url_post)
       *+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -500,6 +502,7 @@
      D  peUserAgent                  64A   const options(*nopass:*omit)
      D  peContentType                64A   const options(*nopass:*omit)
      D  peSOAPAction                 64A   const options(*nopass:*omit)
+     D  peDataLen64                  20i 0 value options(*nopass)
       /else
      D  peUserAgent               16384A   varying const
      D                                     options(*nopass:*omit)
@@ -507,6 +510,7 @@
      D                                     options(*nopass:*omit)
      D  peSOAPAction              16384A   varying const
      D                                     options(*nopass:*omit)
+     D  peDataLen64                  20i 0 value options(*nopass)
       /endif
 
 
@@ -1789,6 +1793,10 @@
       *                - pass *blanks to send an empty SoapAction.
       *                - pass *omit (or don't pass the parm at all) if
       *                    you don't want a SoapAction header to be sent.
+      *  pePostDataLen64 = (input/opt) Total length, in bytes, of post data.
+      *                  use this only with pePostProc (not pePostData)
+      *                  and only when size > 2gb. Otherwise pass 0 here
+      *                  and use pePostData.
       *
       *  Returns  1 if successful,
       *           0 if timed out
@@ -1810,6 +1818,8 @@
      D  peUserAgent                  64A   const options(*nopass:*omit)
      D  peContentType                64A   const options(*nopass:*omit)
      D  peSOAPAction                 64A   const options(*nopass:*omit)
+     D  pePostDataLen64...
+     D                               20i 0 value options(*nopass)
       /else
      D  peUserAgent               16384A   varying const
      D                                     options(*nopass:*omit)
@@ -1817,6 +1827,8 @@
      D                                     options(*nopass:*omit)
      D  peSOAPAction              16384A   varying const
      D                                     options(*nopass:*omit)
+     D  pePostDataLen64...
+     D                               20i 0 value options(*nopass)
       /endif
 
 
@@ -1857,6 +1869,10 @@
       *                          HTTP header when making a SOAP request.
       *      peModTime = (input/optional) only download file if it has
       *                          changed since (this timestamp).
+      * peUplDataLen64 = (input/optional) Pass 0 or don't pass this parm
+      *                          for size <2gb (use peUplDataLen instead)
+      *                          Pass this when using >2gb with the peUplProc
+      *                          parameter.
       *
       *  Returns  1 if successful,
       *           0 if timed out
@@ -1882,6 +1898,8 @@
      D  peSoapAction              32767A   varying const
      D                                     options(*nopass:*omit)
      D  peModTime                      Z   const options(*nopass:*omit)
+     D  peUplDataLen64...
+     D                               20i 0 value options(*nopass)
 
 
       *+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++

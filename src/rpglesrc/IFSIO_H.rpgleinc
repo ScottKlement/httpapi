@@ -211,6 +211,65 @@
 
 
      D**********************************************************************
+     D* File Information Structure, Large File Enabled (stat64)
+     D*   struct stat64 {                                                    */
+     D*     mode_t         st_mode;       /* File mode                       */
+     D*     ino_t          st_ino;        /* File serial number              */
+     D*     uid_t          st_uid;        /* User ID of the owner of file    */
+     D*     gid_t          st_gid;        /* Group ID of the group of fileA2A*/
+     D*     off64_t        st_size;       /* For regular files, the file     */
+     D*                                      size in bytes                   */
+     D*     time_t         st_atime;      /* Time of last access             */
+     D*     time_t         st_mtime;      /* Time of last data modification2A*/
+     D*     time_t         st_ctime;      /* Time of last file status changeA*/
+     D*     dev_t          st_dev;        /* ID of device containing file    */
+     D*     size_t         st_blksize;    /* Size of a block of the file     */
+     D*     nlink_t        st_nlink;      /* Number of links                 */
+     D*     unsigned short st_codepage;   /* Object data codepage            */
+     D*     unsigned long long st_allocsize; /* Allocation size of the file2A*/
+     D*     unsigned int   st_ino_gen_id; /* File serial number generationAid*/
+     D*                                                                      */
+     D*     qp0l_objtype_t st_objtype;    /* AS/400 object type              */
+     D*     char           st_reserved2[5]; /* Reserved                  @B4A*/
+     D*     dev_t          st_rdev;       /* Device ID (if character specialA*/
+     D*                                   /* or block special file)      @B4A*/
+     D*     dev64_t        st_rdev64;     /* Device ID - 64 bit form     @B4A*/
+     D*     dev64_t        st_dev64;      /* ID of device containing file@-2A*/
+     D*                                   /* 64 bit form.                @B4A*/
+     D*     nlink32_t      st_nlink32;    /* Number of links-32 bit      @B5A*/
+     D*     char           st_reserved1[26]; /* Reserved            @B4A @B5C*/
+     D*     unsigned short st_ccsid;      /* Object data ccsid           @AAA*/
+     D*  };                                                                  */
+     D*
+     D**********************************************************************
+     D p_statds64      S               *
+     D statds64        DS                  qualified
+     D                                     BASED(p_statds64)
+     D  st_mode                      10U 0
+     D  st_ino                       10U 0
+     D  st_uid                       10U 0
+     D  st_gid                       10U 0
+     D  st_size                      20I 0
+     D  st_atime                     10I 0
+     D  st_mtime                     10I 0
+     D  st_ctime                     10I 0
+     D  st_dev                       10U 0
+     D  st_blksize                   10U 0
+     D  st_nlink                      5U 0
+     D  st_codepage                   5U 0
+     D  st_allocsize                 20U 0
+     D  st_ino_gen_id                10U 0
+     D  st_objtype                   11A
+     D  st_reserved2                  5A
+     D  st_rdev                      10U 0
+     D  st_rdev64                    20U 0
+     D  st_dev64                     20U 0
+     D  st_nlink32                   10U 0
+     D  st_reserved1                 26A
+     D  st_ccsid                      5U 0
+
+
+     D**********************************************************************
      D* Group Information Structure (group)
      D*
      D*  struct group {
@@ -445,6 +504,15 @@
      D   buf                           *   Value
 
      D*--------------------------------------------------------------------
+     D* Get File Information by Descriptor, Large File Enabled
+     D*
+     D* int fstat64(int fildes, struct stat *buf)
+     D*--------------------------------------------------------------------
+     D fstat64         PR            10I 0 ExtProc('fstat64')
+     D   fildes                      10I 0 Value
+     D   buf                               likeds(statds64)
+
+     D*--------------------------------------------------------------------
      D* Synchronize Changes to fIle
      D*
      D* int fsync(int fildes)
@@ -586,6 +654,19 @@
      D   buf                           *   Value
 
      D*--------------------------------------------------------------------
+     D* Get File or Link Information, Large File Enabled
+     D*
+     D* int lstat64(const char *path, struct stat64 *buf)
+     D*
+     D* NOTE: for non-symlinks, this behaves identically to stat().
+     D*       for symlinks, this gets information about the link, whereas
+     D*       stat() gets information about the file the link points to.
+     D*--------------------------------------------------------------------
+     D lstat64         PR            10I 0 ExtProc('lstat64')
+     D   path                          *   Value options(*string)
+     D   buf                               likeds(statds64)
+
+     D*--------------------------------------------------------------------
      D* Make Directory
      D*
      D* int mkdir(const char *path, mode_t mode)
@@ -706,6 +787,15 @@
      D stat            PR            10I 0 ExtProc('stat')
      D   path                          *   value options(*string)
      D   buf                           *   value
+
+     D*--------------------------------------------------------------------
+     D* Get File Information, Large File Enabled
+     D*
+     D* int stat(const char *path, struct stat64 *buf)
+     D*--------------------------------------------------------------------
+     D stat64          PR            10I 0 ExtProc('stat64')
+     D   path                          *   value options(*string)
+     D   buf                               likeds(statds64)
 
      D*--------------------------------------------------------------------
      D* Make Symbolic Link

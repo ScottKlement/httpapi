@@ -83,7 +83,7 @@
      D  peSaveProc                     *   value procptr
      D  peSendProc                     *   value procptr
      D  pePostData                     *   value
-     D  pePostDataLen                10I 0 value
+     D  pePostDataLen                20I 0 value
      D  peComm                         *   value
      D  peFile                       10I 0 value
      D  peTimeout                    10I 0 value
@@ -130,7 +130,7 @@
      D SendDoc         PR            10I 0
      D  peComm                         *   value
      D  pePostData                     *   value
-     D  pePostDataLen                10I 0 value
+     D  pePostDataLen                20I 0 value
      D  peTimeout                    10I 0 value
      D  peUnused1                      *   value procptr
      D  peUnused2                    10I 0 value
@@ -138,7 +138,7 @@
      D SendRaw         PR            10I 0
      D  peComm                         *   value
      D  peUnused1                      *   value
-     D  peDataSize                   10I 0 value
+     D  peDataSize                   20I 0 value
      D  peTimeout                    10I 0 value
      D  pePostProc                     *   value procptr
      D  pePostFD                     10I 0 value
@@ -222,13 +222,13 @@
      D                 PR
      D   Buf                               likeds(Buffer_t)
      D   DataPtr                       *
-     D   DataLen                     10i 0
+     D   DataLen                     20i 0
 
      D getBufferInfo   PR                  extproc('GETBUFFERINFO_REAL')
      D   Buf                           a   varying len(16000000)
      D                                     const options(*omit:*varsize)
      D   DataPtr                       *
-     D   DataLen                     10i 0
+     D   DataLen                     20i 0
 
      D rcvToBuf        PR            10i 0
      D   fd                          10i 0 value
@@ -247,6 +247,8 @@
      D CRLF            C                   CONST(x'0d25')
      D upper           C                   'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
      D lower           C                   'abcdefghijklmnopqrstuvwxyz'
+     D SEND_CHUNK_SIZE...
+     D                 C                   CONST(8192)
 
       ***  Global Variables  ***
 
@@ -348,7 +350,7 @@
      D  peSaveProc                     *   value procptr
      D  peSendProc                     *   value procptr
      D  pePostData                     *   value
-     D  pePostDataLen                10I 0 value
+     D  pePostDataLen                20I 0 value
      D  peComm                         *   value
      D  peFile                       10I 0 value
      D  peTimeout                    10I 0 value
@@ -368,7 +370,7 @@
      D SendProc        PR            10I 0 extproc(peSendProc)
      D  peComm                         *   value
      D  pePostData                     *   value
-     D  pePostDataLen                10I 0 value
+     D  pePostDataLen                20I 0 value
      D  peTimeout                    10I 0 value
      D  pePostProc                     *   procptr value
      D  pePostFD                     10I 0 value
@@ -1190,17 +1192,20 @@
      D SendDoc         PI            10I 0
      D  peComm                         *   value
      D  pePostData                     *   value
-     D  pePostDataLen                10I 0 value
+     D  pePostDataLen                20I 0 value
      D  peTimeout                    10I 0 value
      D  peUnused1                      *   value procptr
      D  peUnused2                    10I 0 value
 
      D wwPos           S               *
-     D wwLeft          S             10I 0
+     D wwLeft          S             20I 0
      D wwTimeout       S              8A
      D wwErr           S             10I 0
      D wwSent          S             10I 0
      D wwChunk         S             10I 0
+     D wwTotSent       s             20i 0
+     D reportTotal     s             10u 0
+     D reportSent      s             10u 0
 
      c                   callp     http_dmsg('senddoc(): entered')
      c                   eval      p_global = getGlobalPtr()
@@ -1208,11 +1213,18 @@
      c                   eval      wwPos = pePostData
      c                   eval      wwLeft = pePostDataLen
 
+     c                   if        pePostDataLen > 4294967295
+     c                   eval      reportTotal = 4294967295
+     c                   else
+     c                   eval      reportTotal = pePostDataLen
+     c                   endif
+
      c                   dow       wwLeft > 0
 
+     c                   if        wwLeft > SEND_CHUNK_SIZE
+     c                   eval      wwChunk = SEND_CHUNK_SIZE
+     c                   else
      c                   eval      wwChunk = wwLeft
-     c                   if        wwChunk > 8192
-     c                   eval      wwChunk = 8192
      c                   endif
 
      c                   if        global.debugLevel > 1
@@ -1246,8 +1258,14 @@
      c                   callp     http_dmsg('senddoc(): calling user ' +
      c                                 'defined upload_sts routine')
      c                   endif
-     c                   callp     upload_sts(pePostDataLen-wwLeft
-     c                                       : pePostDataLen
+     c                   eval      wwTotSent = pePostDataLen - wwLeft
+     c                   if        wwTotSent > 4294967295
+     c                   eval      reportSent = 4294967295
+     c                   else
+     c                   eval      reportSent = wwTotSent
+     c                   endif
+     c                   callp     upload_sts( reportSent
+     c                                       : reportTotal
      c                                       : wkUplUData )
      c                   if        global.debugLevel > 1
      c                   callp     http_dmsg('senddoc(): upload_sts ' +
@@ -1271,7 +1289,7 @@
      D SendRaw         PI            10I 0
      D  peComm                         *   value
      D  peUnused1                      *   value
-     D  peDataSize                   10I 0 value
+     D  peDataSize                   20I 0 value
      D  peTimeout                    10I 0 value
      D  pePostProc                     *   value procptr
      D  pePostFD                     10I 0 value
@@ -1283,13 +1301,21 @@
 
      D wwLen           S             10I 0
      D wwBuf           s           8192A
-     D wwSent          S             10I 0
+     D wwSent          S             20I 0
      D wwNeed          S             10I 0
      D rc              s             10i 0
+     D reportTotal     s             10u 0
+     D reportSent      s             10u 0
 
      c                   callp     http_dmsg('sendraw(): entered')
      c                   eval      p_global = getGlobalPtr()
      c                   eval      wwSent = 0
+
+     c                   if        peDataSize > 4294967295
+     c                   eval      reportTotal = 4294967295
+     c                   else
+     c                   eval      reportTotal = peDataSize
+     c                   endif
 
      c                   dow       peDataSize > wwSent
 
@@ -1359,8 +1385,13 @@
      c                   callp     http_dmsg('sendraw(): calling user ' +
      c                                 'defined upload_sts routine')
      c                   endif
-     c                   callp     upload_sts(wwSent
-     c                                       : peDataSize
+     c                   if        wwSent > 4294967295
+     c                   eval      reportSent = 4294967295
+     c                   else
+     c                   eval      reportSent = wwSent
+     c                   endif
+     c                   callp     upload_sts( reportSent
+     c                                       : reportTotal
      c                                       : wkUplUData )
      c                   if        global.debugLevel > 1
      c                   callp     http_dmsg('sendraw(): upload_sts ' +
@@ -1370,7 +1401,7 @@
 
      c                   enddo
 
-     c                   return    wwSent
+     c                   return    1
      P                 E
 
 
@@ -2340,9 +2371,14 @@
       *    if it doesnt, create it (O_CREAT = create)
       *    and assign the remote codepage to it.
       *********************************************************
-     c                   eval      wwFD = open(%trimr(peFilename):
-     c                             O_WRONLY+O_TRUNC+O_CREAT+CCSID_OR_CP:
-     c                             global.file_mode: FILE_CCSID())
+     c                   eval      wwFD = open( %trimr(peFilename)
+     c                                        : O_WRONLY
+     c                                          + O_TRUNC
+     c                                          + O_CREAT
+     c                                          + CCSID_OR_CP
+     c                                          + O_LARGEFILE
+     c                                        : global.file_mode
+     c                                        : FILE_CCSID())
      c                   if        wwFD < 0
      c                   callp     SetError(HTTP_FDOPEN:'open(): ' +
      c                               %str(strerror(errno)) )
@@ -2412,9 +2448,14 @@
       *    if it doesnt, create it (O_CREAT = create)
       *    and assign the remote codepage to it.
       *********************************************************
-     c                   eval      wwFD = open(%trimr(peFilename):
-     c                             O_WRONLY+O_TRUNC+O_CREAT+CCSID_OR_CP:
-     c                             global.file_mode: FILE_CCSID())
+     c                   eval      wwFD = open( %trimr(peFilename)
+     c                                        : O_WRONLY
+     c                                          + O_TRUNC
+     c                                          + O_CREAT
+     c                                          + CCSID_OR_CP
+     c                                          + O_LARGEFILE
+     c                                        : global.file_mode
+     c                                        : FILE_CCSID())
      c                   if        wwFD < 0
      c                   callp     SetError(HTTP_FDOPEN:'open(): ' +
      c                               %str(strerror(errno)) )
@@ -2711,6 +2752,7 @@
      D  peUserAgent                  64A   const options(*nopass:*omit)
      D  peContentType                64A   const options(*nopass:*omit)
      D  peSOAPAction                 64A   const options(*nopass:*omit)
+     D  peDataLen64                  20i 0 value options(*nopass)
 
      D wwComm          s               *
      D rc              s             10I 0
@@ -2782,7 +2824,7 @@
      c                                                   : peUserAgent
      c                                                   : peContentType )
 
-     c                   other
+     c                   when      %parms < 11
      c                   eval      rc = http_persist_post( wwComm
      c                                                   : peURL
      c                                                   : pePostFD
@@ -2795,6 +2837,21 @@
      c                                                   : peUserAgent
      c                                                   : peContentType
      c                                                   : peSOAPAction )
+
+     c                   other
+     c                   eval      rc = http_persist_post( wwComm
+     c                                                   : peURL
+     c                                                   : pePostFD
+     c                                                   : pePostProc
+     c                                                   : *NULL
+     c                                                   : peDataLen
+     c                                                   : peSaveFD
+     c                                                   : peSaveProc
+     c                                                   : peTimeout
+     c                                                   : peUserAgent
+     c                                                   : peContentType
+     c                                                   : peSOAPAction
+     c                                                   : peDataLen64 )
      c                   endsl
 
       *********************************************************
@@ -2822,9 +2879,23 @@
 
      D wwPostFD        S             10I 0
      D wwRecvFD        S             10I 0
-     D wwDataSize      s             10U 0
+     D wwDataSize      s             10I 0
+     D wwDataSize64    s             20I 0
      D rc              S             10I 0
-     D wwStat          s                   like(statds)
+     D wwStat          ds                  likeds(statds64)
+     D wwTimeout       s                   like(peTimeout) inz(HTTP_TIMEOUT)
+     D p_UserAgent     s               *   inz(*null)
+     D wwUserAgent     s          16384a   varying
+     D                                     based(p_UserAgent)
+     D stgUserAgent    s          16384a   varying
+     D p_ContentType   s               *   inz(*null)
+     D wwContentType   s          16384a   varying
+     D                                     based(p_ContentType)
+     D stgContentType  s          16384a   varying
+     D p_SOAPAction    s               *   inz(*null)
+     D wwSOAPAction    s          16384a   varying
+     D                                     based(p_SOAPAction)
+     D stgSOAPAction   s          16384a   varying
 
      c                   callp     SetRespCode(0)
      c                   callp     http_dmsg('http_url_post_stmf(): ' +
@@ -2835,18 +2906,23 @@
       * open file to be posted
       *********************************************************
      c                   callp     http_dmsg('getting post file size...')
-     c                   if        stat(pePostFile: %addr(wwStat)) < 0
-     c                   callp     SetError(HTTP_FDSTAT:'stat(): ' +
+     c                   if        stat64(pePostFile: wwStat) < 0
+     c                   callp     SetError(HTTP_FDSTAT:'stat64(): ' +
      c                                        %str(strerror(errno)) )
      c                   return    -1
      c                   endif
 
-     c                   eval      p_statds = %addr(wwStat)
-     c                   eval      wwDataSize = st_size
+     c                   if        wwStat.st_size > 2147483647
+     c                   eval      wwDataSize64 = wwStat.st_size
+     c                   eval      wwDataSize = 0
+     c                   else
+     c                   eval      wwDataSize = wwStat.st_size
+     c                   eval      wwDataSize64 = 0
+     c                   endif
 
      c                   callp     http_dmsg('opening file to be sent...')
      c                   eval      wwPostFD = open( %trimr(pePostFile)
-     c                                            : O_RDONLY )
+     c                                            : O_LARGEFILE + O_RDONLY )
      c                   if        wwPostFD < 0
      c                   callp     SetError(HTTP_FDOPEN:'open(): ' +
      c                                        %str(strerror(errno)) )
@@ -2854,9 +2930,35 @@
      c                   endif
 
       *********************************************************
+      * do something to handle optional parameters
+      *********************************************************
+     c                   if         %parms >= 4
+     c                   eval       wwTimeout = peTimeout
+     c                   endif
+
+     c                   if         %parms >= 5 
+     c                              and %addr(peUserAgent) <> *null
+     c                   eval       p_UserAgent = %addr(stgUserAgent)
+     C                   eval       stgUserAgent = getSA(peUserAgent)
+     c                   endif
+     
+     c                   if         %parms >= 6 
+     c                              and %addr(peContentType) <> *null
+     c                   eval       p_ContentType = %addr(stgContentType)
+     C                   eval       stgContentType = getSA(peContentType)
+     c                   endif
+     
+     c                   if         %parms >= 7
+     c                              and %addr(peSOAPAction) <> *null
+     c                   eval       p_SOAPAction = %addr(stgSOAPAction)
+     C                   eval       stgSOAPAction = getSA(peSOAPAction)
+     c                   endif
+
+      *********************************************************
       * open file for writing (O_WRONLY = write only)
       *    if it exists, truncate it (O_TRUNC = truncate)
       *    if it doesnt, create it (O_CREAT = create)
+      *    allow >2gb files (O_LARGEFILE)
       *    and assign the remote codepage to it.
       *********************************************************
      c                   callp     http_dmsg('opening file to be received')
@@ -2865,6 +2967,7 @@
      c                                            + O_TRUNC
      c                                            + O_CREAT
      c                                            + CCSID_OR_CP
+     c                                            + O_LARGEFILE
      c                                            : global.file_mode
      c                                            : FILE_CCSID()
      c                                            )
@@ -2879,53 +2982,18 @@
       *  Call the 'raw' post procedure, telling it to use
       *  the IFS API called 'write' to write data.
       *********************************************************
-     c                   select
-     c                   when      %parms < 4
-     c                   eval      rc = http_url_post_raw2( peURL
-     c                                                    : wwPostFD
-     c                                                    : %paddr('read')
-     c                                                    : wwDataSize
-     c                                                    : wwRecvFD
-     c                                                    : %paddr('write'))
-     c                   when      %parms < 5
+     
      c                   eval      rc = http_url_post_raw2( peURL
      c                                                    : wwPostFD
      c                                                    : %paddr('read')
      c                                                    : wwDataSize
      c                                                    : wwRecvFD
      c                                                    : %paddr('write')
-     c                                                    : peTimeout )
-     c                   when      %parms < 6
-     c                   eval      rc = http_url_post_raw2( peURL
-     c                                                    : wwPostFD
-     c                                                    : %paddr('read')
-     c                                                    : wwDataSize
-     c                                                    : wwRecvFD
-     c                                                    : %paddr('write')
-     c                                                    : peTimeout
-     c                                                    : peUserAgent )
-     c                   when      %parms < 7
-     c                   eval      rc = http_url_post_raw2( peURL
-     c                                                    : wwPostFD
-     c                                                    : %paddr('read')
-     c                                                    : wwDataSize
-     c                                                    : wwRecvFD
-     c                                                    : %paddr('write')
-     c                                                    : peTimeout
-     c                                                    : peUserAgent
-     c                                                    : peContentType )
-     c                   other
-     c                   eval      rc = http_url_post_raw2( peURL
-     c                                                    : wwPostFD
-     c                                                    : %paddr('read')
-     c                                                    : wwDataSize
-     c                                                    : wwRecvFD
-     c                                                    : %paddr('write')
-     c                                                    : peTimeout
-     c                                                    : peUserAgent
-     c                                                    : peContentType
-     c                                                    : peSOAPAction )
-     c                   endsl
+     c                                                    : wwTimeout
+     c                                                    : wwUserAgent
+     c                                                    : wwContentType
+     c                                                    : wwSOAPAction
+     c                                                    : wwDataSize64 )
 
      c                   callp     close(wwPostFD)
      c                   callp     close(wwRecvFD)
@@ -3173,18 +3241,20 @@
      P                 B                   export
      D http_persist_post...
      D                 PI            10I 0
-     D  peComm                         *   value
-     D  peURL                     32767A   varying const options(*varsize)
-     D  pePostFD                     10I 0 value
-     D  pePostProc                     *   value procptr
-     D  pePostData                     *   value
-     D  pePostDataLen                10I 0 value
-     D  peSaveFD                     10I 0 value
-     D  peSaveProc                     *   value procptr
-     D  peTimeout                    10I 0 value options(*nopass)
-     D  peUserAgent                  64A   const options(*nopass:*omit)
-     D  peContentType                64A   const options(*nopass:*omit)
-     D  peSOAPAction                 64A   const options(*nopass:*omit)
+1    D  peComm                         *   value
+2    D  peURL                     32767A   varying const options(*varsize)
+3    D  pePostFD                     10I 0 value
+4    D  pePostProc                     *   value procptr
+5    D  pePostData                     *   value
+6    D  pePostDataLen                10I 0 value
+7    D  peSaveFD                     10I 0 value
+8    D  peSaveProc                     *   value procptr
+9    D  peTimeout                    10I 0 value options(*nopass)
+10   D  peUserAgent                  64A   const options(*nopass:*omit)
+11   D  peContentType                64A   const options(*nopass:*omit)
+12   D  peSOAPAction                 64A   const options(*nopass:*omit)
+13   D  pePostDataLen64...
+     D                               20i 0 value options(*nopass)
 
      D wwUA            S          16384A   varying
      D wwCT            S          16384A   varying
@@ -3196,6 +3266,8 @@
      D wwContentType   S          16384A   varying based(p_ContentType)
      D p_SOAPAction    S               *
      D wwSOAPAction    S          32767A   varying based(p_SOAPAction)
+     D dataLen         s             10i 0
+     D dataLen64       s             20i 0
 
      c                   callp     SetRespCode(0)
      c                   eval      p_global = getGlobalPtr()
@@ -3238,19 +3310,31 @@
      c                   eval      p_SOAPAction = *NULL
      c                   endif
 
+      * If no 64-bit data length, use the 32-bit one
+     c                   if        %parms>=13
+     c                             and pePostDataLen64 > 0
+     c                   eval      dataLen64 = pePostDataLen64
+     c                   eval      dataLen = 0
+     c                   else
+     c                   eval      dataLen = pePostDataLen
+     c                   eval      dataLen64 = 0
+     c                   endif
+
      c                   return    http_persist_req( 'POST'
      c                                             : peComm
      c                                             : peURL
      c                                             : pePostFD
      c                                             : pePostProc
      c                                             : pePostData
-     c                                             : pePostDataLen
+     c                                             : dataLen
      c                                             : peSaveFD
      c                                             : peSaveProc
      c                                             : wwTimeout
      c                                             : wwUserAgent
      c                                             : wwContentType
-     c                                             : wwSoapAction )
+     c                                             : wwSoapAction
+     c                                             : *omit
+     c                                             : dataLen64 )
 
      P                 E
 
@@ -3262,23 +3346,25 @@
      P                 B                   export
      D http_persist_req...
      D                 PI            10I 0
-     D  peMethod                     10a   varying const
-     D  peComm                         *   value
-     D  peURL                     32767A   varying const options(*varsize)
-     D  peUplFD                      10I 0 value
-     D  peUplProc                      *   value procptr
-     D  peUplData                      *   value
-     D  peUplDataLen                 10I 0 value
-     D  peSaveFD                     10I 0 value
-     D  peSaveProc                     *   value procptr
-     D  peTimeout                    10I 0 value options(*nopass)
-     D  peUserAgent               16384A   varying const
+1    D  peMethod                     10a   varying const
+2    D  peComm                         *   value
+3    D  peURL                     32767A   varying const options(*varsize)
+4    D  peUplFD                      10I 0 value
+5    D  peUplProc                      *   value procptr
+6    D  peUplData                      *   value
+7    D  peUplDataLen                 10I 0 value
+8    D  peSaveFD                     10I 0 value
+9    D  peSaveProc                     *   value procptr
+10   D  peTimeout                    10I 0 value options(*nopass)
+11   D  peUserAgent               16384A   varying const
      D                                     options(*nopass:*omit)
-     D  peContentType             16384A   varying const
+12   D  peContentType             16384A   varying const
      D                                     options(*nopass:*omit)
-     D  peSoapAction              32767A   varying const
+13   D  peSoapAction              32767A   varying const
      D                                     options(*nopass:*omit)
-     D  peModTime                      Z   const options(*nopass:*omit)
+14   D  peModTime                      Z   const options(*nopass:*omit)
+15   D  peUplDataLen64...
+     D                               20i 0 value options(*nopass)
 
      D wwMethod        s                   like(peMethod)
      D wwUA            S          16384A   varying
@@ -3301,11 +3387,11 @@
      D wwUplProc       s               *   procptr
      D wwSecure        s              1N   inz(*OFF)
      D wwUplData       s                   like(peUplData) inz(*null)
-     D wwUplLen        s                   like(peUplDataLen)
      D p_ModTime       S               *
      D wwModTime       S               Z   based(p_ModTime)
      D wwMT            S               Z
      D wwFreeData      S              1N   INZ(*OFF)
+     D dataLen         s             20i 0
 
      c                   eval      RDWR_Reader_p = *null
      c                   eval      RDWR_Writer_p = *null
@@ -3366,6 +3452,14 @@
      c                   eval      p_ModTime = *NULL
      c                   endif
 
+      * if no 64-bit data length, use the 32-bit one
+     c                   if        %parms >= 15 
+     c                             and peUplDataLen64 > 0
+     c                   eval      dataLen = peUplDataLen64
+     c                   else
+     c                   eval      dataLen = peUplDataLen
+     c                   endif
+
       *********************************************************
       *  Parse URL into it's components, and then look up
       *  host & build a socket address structure:
@@ -3400,15 +3494,20 @@
       *********************************************************
       * Translate Upload data to remote character encoding
       *  (if necessary)
+      *
+      * NOTE: Sizes larger than 2gb are currently only allowed
+      *       when using an upload proc.
       *********************************************************
      c                   eval      wwUplData = peUplData
-     c                   eval      wwUplLen = peUplDataLen
-     c                   if        peUplDataLen>0 and peUplProc=*NULL
-     c                   eval      wwUplLen = http_xlatedyn( peUplDataLen
-     c                                                     : peUplData
-     c                                                     : TO_ASCII
-     c                                                     : wwUplData )
-     c                   if        wwUplLen = -1
+     c                   if        dataLen>0 and peUplProc=*NULL
+     c                   if        dataLen > 2147483647
+     c                   eval      dataLen = 2147483647
+     c                   endif
+     c                   eval      dataLen = http_xlatedyn( dataLen
+     c                                                    : peUplData
+     c                                                    : TO_ASCII
+     c                                                    : wwUplData )
+     c                   if        dataLen = -1
      c                   return    -1
      c                   endif
      c                   eval      wwFreeData = *on
@@ -3432,7 +3531,7 @@
      c                                         : peSaveProc
      c                                         : wwUplProc
      c                                         : wwUplData
-     c                                         : wwUplLen
+     c                                         : dataLen 
      c                                         : peComm
      c                                         : peSaveFD
      c                                         : wwTimeout
@@ -3997,10 +4096,11 @@
 
      D ResultPtr       s               *   inz(*null)
      D ResultSize      s             10i 0 inz(0)
-     D ResultLen       s             10i 0 inz(0)
+     D ResultLen       s             20i 0 inz(0)
 
      D SendPtr         s               *   inz(*null)
      D SendLen         s             10i 0 inz(0)
+     D SendLen64       s             20i 0 inz(0)
      D dtype           s             10i 0
      D vtype           s             10i 0
      D inf1            s             10i 0
@@ -4009,7 +4109,7 @@
      D Len             s             10i 0
      D p_Result        s               *
      D ct              s                   like(ContentType)
-     D stmfInfo        ds                  likeds(statds)
+     D stmfInfo        ds                  likeds(statds64)
 
      D SoapAction      s          32767a   varying
      D                                     based(p_SoapAction)
@@ -4019,30 +4119,31 @@
         p_global = getGlobalPtr();
 
         if %parms >= 5 and %addr(SendStmf) <> *null;
-           sndFd = open( %trimr(SendStmf) : O_RDONLY );
+           sndFd = open( %trimr(SendStmf) : O_RDONLY + O_LARGEFILE );
            if sndFd = -1;
               SetError( HTTP_FDOPEN
                       :'open(): ' + %str(strerror(errno)) );
               return -1;
            endif;
            sndProc = %paddr(read);
-           if stat( %trimr(SendStmf): %addr(stmfInfo) ) = -1;
+           if stat64( %trimr(SendStmf): stmfInfo ) = -1;
               SetError( HTTP_FDSTAT
-                      : 'stat(): '+ %str(strerror(errno)) );
+                      : 'stat64(): '+ %str(strerror(errno)) );
               callp close(sndFd);
               return -1;
            endif;
-           sendLen = stmfInfo.st_size;
+           sendLen64 = stmfInfo.st_size;
         endif;
 
         if sndFd=-1 and %parms >= 6 and %addr(SendStr) <> *null;
-           getBufferInfo(SendStr: SendPtr: SendLen );
+           getBufferInfo(SendStr: SendPtr: SendLen64 );
            sndProc = *null;
         endif;
 
         if %parms >= 3 and %addr(ResultStmf) <> *null;
            rcvFd = open( %trimr(ResultStmf)
-                       : O_CREAT + O_TRUNC + O_WRONLY + CCSID_OR_CP
+                       : O_CREAT + O_TRUNC + O_WRONLY 
+                        + CCSID_OR_CP + O_LARGEFILE
                        : global.file_mode
                        : global.file_ccsid );
            if rcvFd = -1;
@@ -4085,6 +4186,13 @@
            p_SoapAction = *null;
         endif;
 
+        if sendLen64 <= 2147483647;
+          sendLen = sendLen64;
+          sendLen64 = 0;
+        else;
+          sendLen = 0;
+        endif;
+
         rc = http_persist_req( Type
                              : comm
                              : URL
@@ -4098,7 +4206,8 @@
                              : global.userAgent
                              : ct
                              : soapAction
-                             : global.modTime );
+                             : global.modTime
+                             : sendLen64 );
 
         exsr closeFiles;
         http_persist_close(comm);
@@ -4153,7 +4262,7 @@
      D                 PI
      D   Buf                               likeds(Buffer_t)
      D   DataPtr                       *
-     D   DataLen                     10i 0
+     D   DataLen                     20i 0
       /free
        if %addr(buf) = *null;
           DataPtr = *null;
