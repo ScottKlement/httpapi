@@ -2,6 +2,7 @@ Changes to version 1.52 from 1.51
   - Allow sending/receiving files larger than 2gb. (This only applies to files
     not strings at this time.)
   - EXAMPLE13 should be marked as SQLRPGLE in upload.bat (by mkzip.sh)
+  - Update copyright to 2025
 
 Changes to version 1.51 from 1.49 (Skipped 1.50 to avoid confusing with 1.5)
   - Allow long URLs in http_redir_loc

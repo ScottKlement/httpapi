@@ -7,7 +7,7 @@ SHELL = /usr/bin/qsh
 .SHELLFLAGS = -ec
 
 VERSION        := 1.52
-COPYRIGHT      := Version $(VERSION). Copyright 2001-2024 Scott C. Klement.
+COPYRIGHT      := Version $(VERSION). Copyright 2001-2025 Scott C. Klement.
 LIBRARY	       ?= LIBHTTP
 PKGLIB	       ?= LIBHTTPPKG
 TGTRLS         ?= v7r1m0

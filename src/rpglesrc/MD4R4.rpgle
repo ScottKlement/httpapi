@@ -1,5 +1,5 @@
      /*-                                                                            +
-      * Copyright (c) 2012-2024 Thomas Raddatz                                      +
+      * Copyright (c) 2012-2025 Thomas Raddatz                                      +
       * All rights reserved.                                                        +
       *                                                                             +
       * Redistribution and use in source and binary forms, with or without          +
