@@ -69,6 +69,7 @@ for FILE in $(cat ${WORKF} | cut -c 3-); do
     STYLE.CSS) srctype=CSS ;;
     HTTPAPIPNL) srctype=PNLGRP ;;
     MD4C) srctype=C ;;
+    EXAMPLE13) srctype=SQLRPGLE ;;
   esac
 
   system -vq "CPYTOSTMF FROMMBR('$INFULL') TOSTMF('$OUTFULL') STMFOPT(*REPLACE) STMFCODPAG(819)" || exit 1
