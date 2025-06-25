@@ -8,12 +8,12 @@ SHELL = /usr/bin/qsh
 
 VERSION        := 1.52
 COPYRIGHT      := Version $(VERSION). Copyright 2001-2024 Scott C. Klement.
-LIBRARY				 ?= LIBHTTP
-PKGLIB				 ?= LIBHTTPPKG
+LIBRARY	       ?= LIBHTTP
+PKGLIB	       ?= LIBHTTPPKG
 TGTRLS         ?= v7r1m0
-USE_XML			 	 ?= 1
+USE_XML	       ?= 1
 BUILD_EXAMPLES ?= 1
-DEBUG					 ?= 1
+DEBUG	       ?= 1
 
 ifneq (,$(BUILDLIB))
 LIBRARY=$(BUILDLIB)
@@ -34,14 +34,14 @@ RPGINCDIR     := incdir($(RPGINCDIR))
 CINCDIR       := 'src' 'src/expat' 
 CINCDIR       := incdir($(CINCDIR))
 BNDDIR        :=
-C_OPTS				:= localetype(*localeucs2) sysifcopt(*ifsio) define(HAVE_EXPAT_CONFIG_H)
+C_OPTS	      := localetype(*localeucs2) sysifcopt(*ifsio) define(HAVE_EXPAT_CONFIG_H)
 CL_OPTS       :=
 RPG_OPTS      := option(*noseclvl)
 PGM_OPTS      :=
 OWNER         := qpgmr
 USRPRF        := *user
-BNDSRVPGM			:=
-PGM_ACTGRP		:= HTTPAPI
+BNDSRVPGM     :=
+PGM_ACTGRP    := HTTPAPI
 SRVPGM_ACTGRP := *caller
 
 SETLIBLIST    := liblist | grep ' USR' | while read lib type; do liblist -d $$lib; done; liblist -a $(LIBRARY)
