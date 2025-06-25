@@ -707,6 +707,7 @@
      D                                     options(*nopass:*omit)
      D  peSOAPAction              16384A   varying const
      D                                     options(*nopass:*omit)
+
      D http_url_post_xml...
      D                 PR            10I 0
      D  peURL                     32767A   varying const options(*varsize)
