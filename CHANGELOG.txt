@@ -1,3 +1,7 @@
+Changes to version 1.53 from 1.52
+  - added 'noshow:' prefix to http_mfd_encoder_addstmf() to avoid including
+     the filename in the multipart form
+
 Changes to version 1.52 from 1.51
   - Allow sending/receiving files larger than 2gb. (This only applies to files
     not strings at this time.)

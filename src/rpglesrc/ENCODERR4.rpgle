@@ -979,10 +979,17 @@
      D wwLine          s          32791A   varying
      D wwBuffer        s          32767A
      D wwLen           s             10I 0
+     D showfn          s              1n   inz(*on)
 
      c                   eval      p_Mfd = peEncoder
 
      c                   eval      wwFilename = %trimr(%str(pePathname))
+     c                   if        %len(wwFilename) > 7
+     c                             and %subst(wwFilename:1:7) = 'noshow:'
+     c                   eval      showfn = *off
+     c                   eval      wwFilename = %subst(wwFilename:8)
+     c                   endif
+
      c                   eval      wwFD = open( wwFilename: O_RDONLY)
      c                   if        wwFD < 0
      c                   callp     SetError( HTTP_IFOPEN
@@ -998,10 +1005,12 @@
 
      c                   eval      wwLine = 'Content-Disposition: '
      c                                    + 'form-data; '
-     c                                    + 'name="' + peVariable + '"; '
-     c                                    + 'filename="'
+     c                                    + 'name="' + peVariable + '"'
+     c                   if        showfn = *on
+     c                   eval      wwLine += '; filename="'
      c                                    + %str(pePathName) + '"'
-     c                                    + CRLF
+     c                   endif
+     c                   eval      wwLine += CRLF
      c                   callp     http_xlate(%len(wwLine): wwLD: TO_ASCII)
      c                   callp     write(dsMfd_fd : p_LD: %len(wwLine))
 

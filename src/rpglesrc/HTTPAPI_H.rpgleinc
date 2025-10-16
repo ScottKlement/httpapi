@@ -30,9 +30,9 @@
       /endif
 
      D HTTPAPI_VERSION...
-     D                 C                   CONST('1.52')
+     D                 C                   CONST('1.53')
      D HTTPAPI_RELDATE...
-     D                 C                   CONST('2025-06-25')
+     D                 C                   CONST('2025-10-15')
 
       /copy config_h
 
@@ -1442,7 +1442,11 @@
       *    peEncoder = pointer to encoder created by the
       *                  http_mfd_encoder_open() routine
       *   peVariable = variable name to add
-      *   pePathName = Path name of stream file to add
+      *   pePathName = Path name of stream file to add. You can
+      *                  prefix the path name with 'noshow:' to
+      *                  prevent the filename appearing in the form.
+      *                  example: '/tmp/myfile.dat'
+      *                       or  'noshow:/tmp/myfile.dat'
       *   peContType = Content-type of stream file to add
       *
       * Returns *ON if successful, *OFF otherwise.
